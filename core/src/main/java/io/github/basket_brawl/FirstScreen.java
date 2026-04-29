@@ -1,9 +1,28 @@
 package io.github.basket_brawl;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.g2d.Batch;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.Matrix4;
 
 /** First screen of the application. Displayed after the application is created. */
 public class FirstScreen implements Screen {
+    private Player player;
+    private Batch batch;
+    private ShapeRenderer shapeRenderer;
+    
+    public FirstScreen() {
+        // Create player at center of screen (approximate)
+        player = new Player(384, 256);
+        batch = new SpriteBatch();
+        shapeRenderer = new ShapeRenderer();
+    }
+    
     @Override
     public void show() {
         // Prepare your screen here.
@@ -11,7 +30,23 @@ public class FirstScreen implements Screen {
 
     @Override
     public void render(float delta) {
-        // Draw your screen here. "delta" is the time since last render in seconds.
+        // Clear screen with black background
+        Gdx.gl.glClearColor(0, 0, 0, 1);
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+        
+        // Handle WASD input
+        Input input = Gdx.input;
+        boolean left = input.isKeyPressed(Input.Keys.A);
+        boolean right = input.isKeyPressed(Input.Keys.D);
+        
+        // Update player position
+        player.update(delta, left, right);
+        
+        // Draw player using ShapeRenderer
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+        shapeRenderer.setColor(Color.RED);
+        shapeRenderer.rect(player.getX(), player.getY(), player.getWidth(), player.getHeight());
+        shapeRenderer.end();
     }
 
     @Override
@@ -20,7 +55,10 @@ public class FirstScreen implements Screen {
         // In that case, we don't resize anything, and wait for the window to be a normal size before updating.
         if(width <= 0 || height <= 0) return;
 
-        // Resize your screen here. The parameters represent the new window size.
+        // Set up projection matrix for shape renderer (orthographic, origin bottom-left)
+        Matrix4 projection = new Matrix4();
+        projection.setToOrtho2D(0, 0, width, height);
+        shapeRenderer.setProjectionMatrix(projection);
     }
 
     @Override
