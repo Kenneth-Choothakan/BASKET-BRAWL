@@ -1,23 +1,21 @@
 package io.github.basket_brawl;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
-import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import static com.badlogic.gdx.utils.ScreenUtils.clear;
 import com.badlogic.gdx.utils.viewport.FitViewport;
-import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.Table;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
-import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
-import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
-import com.badlogic.gdx.scenes.scene2d.InputEvent;
 
 /** First screen of the application. Displayed after the application is created. */
 public class StartScreen implements Screen {
@@ -32,7 +30,7 @@ public class StartScreen implements Screen {
     ImageButton startButton;
     ImageButton selectionButton;
     TextureRegionDrawable startDrawable;
-    TextureRegionDrawable selectionDrawable;
+    TextureRegionDrawable selectionDrawable; 
     Main game;
     Texture startHoverTex;
     Texture selectHoverTex;
@@ -44,7 +42,7 @@ public class StartScreen implements Screen {
 public StartScreen(Main game) {
     this.game = game;
     
-    backgroundTexture = new Texture(Gdx.files.internal("start_screen.png"));
+    backgroundTexture = new Texture(Gdx.files.internal("newStartScreen.jpg"));
     startTexture = new Texture(Gdx.files.internal("button_centered_2.png"));
     selectionTexture = new Texture(Gdx.files.internal("button_centered_4.png"));
     Texture startHoverTex = new Texture(Gdx.files.internal("button_centered_1.png"));
@@ -73,11 +71,10 @@ public StartScreen(Main game) {
     table.setFillParent(true);
     stage.addActor(table);
 
-    table.defaults().pad(2f);
+    //table.defaults().pad(2f);
 
-
-    table.add(startButton).size(3f, 2f).padBottom(-1f);
-    table.add(selectionButton).size(3f, 2f).padBottom(-1f);
+    table.add(startButton).size(3f, 2f);
+    table.add(selectionButton).size(3f, 2f);
 
     startButton.addListener(new ClickListener() {
         @Override
@@ -92,6 +89,19 @@ public StartScreen(Main game) {
             game.Selection();
         }
     });
+    
+    //TODO: fix sliding animation and positioning
+    startButton.setPosition(100, -100f);
+    selectionButton.setPosition(100, -100f);
+
+
+    float duration = 0.5f;
+    startButton.addAction(Actions.moveTo(2f, -1f, duration));
+    selectionButton.addAction(Actions.moveTo(5f, -1f, duration));
+
+    startButton.setPosition(2f, -1f);
+    selectionButton.setPosition(5f, -1f);
+
 
     }
     
