@@ -44,7 +44,7 @@ public class Main extends Game {
 
     @Override
     public void create() {
-        setScreen(new StartScreen());
+        start();
 
         song1 = Gdx.audio.newMusic(Gdx.files.internal("4X4.mp3"));
         song2 = Gdx.audio.newMusic(Gdx.files.internal("5TO10.mp3"));
@@ -101,5 +101,17 @@ public class Main extends Game {
             music = songArray[songSelection];
             music.play();
         }
+    }
+
+    public void start(){
+        setScreen(new StartScreen(this));
+    }
+
+    public void Selection(){
+        setScreen(new SelectionScreen());
+    }
+
+    public void play(){
+        setScreen(new FirstScreen());
     }
 }
