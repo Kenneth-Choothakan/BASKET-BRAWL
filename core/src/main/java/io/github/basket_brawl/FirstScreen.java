@@ -3,46 +3,26 @@ package io.github.basket_brawl;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Matrix4;
 
 /** First screen of the application. Displayed after the application is created. */
 public class FirstScreen implements Screen {
-    private static final float CHARGE_RATE = 1.5f;
-    private static final float BAR_HOLD_TIME = 1.0f;
-    private static final float BAR_WIDTH = 48f;
-    private static final float BAR_HEIGHT = 220f;
-    private static final float BAR_MARGIN = 32f;
-    //                                                           Green           Yellow           Yellow 
-    private static final float[][] shootingMargin2Pointer = {{0.45f,0.625f}, {0.35f, 0.45f}, {0.625f, 0.75f}};
-    private static final float[][] shootingMargin3Pointer = {{0.675f,0.749f}, {0.575f, 0.675f}, {0.749f, 0.852f}};
-    private final OrthographicCamera camera = new OrthographicCamera();
-    private final ShapeRenderer shapeRenderer = new ShapeRenderer();
-    private SpriteBatch spriteBatch;
-    private Texture basketballTexture;
-    private Texture hoopTexture;
+    private Player player;
+    private Batch batch;
+    private ShapeRenderer shapeRenderer;
     
-    private float chargeAmount;
-    private float timeSinceRelease = BAR_HOLD_TIME;
-    private boolean wasHolding;
-    private float transparency = 1f;
-    private boolean canShoot = true;
-    private final float distanceFromBasket = 45f;
-    private float[][] shootingMargins;
+    public FirstScreen() {
+        // Create player at center of screen (approximate)
+        player = new Player(384, 256);
+        batch = new SpriteBatch();
+        shapeRenderer = new ShapeRenderer();
+    }
     
-    // Trajectory tracking variables
-    private boolean isTrajectoryActive = false;
-    private float trajectoryTime = 0f;
-    private static final float TRAJECTORY_DURATION = 1.2f;
-    private float ballStartX;
-    private float ballStartY;
-    private boolean shouldMakeShot = false;
-    private boolean missHigh = false;
-    private float shotPeakHeight = 200f;
     @Override
     public void show() {
         resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
@@ -57,15 +37,23 @@ public class FirstScreen implements Screen {
 
     @Override
     public void render(float delta) {
-        shootListener(delta);
-
-        Gdx.gl.glClearColor(0.08f, 0.09f, 0.12f, 1f);
+        // Clear screen with black background
+        Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-        Gdx.gl.glEnable(GL20.GL_BLEND);
-        Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
-
-        renderChargeBar(Gdx.input.isKeyPressed(Input.Keys.W), transparency);
-        renderBasketballShot();
+        
+        // Handle WASD input
+        Input input = Gdx.input;
+        boolean left = input.isKeyPressed(Input.Keys.A);
+        boolean right = input.isKeyPressed(Input.Keys.D);
+        
+        // Update player position
+        player.update(delta, left, right);
+        
+        // Draw player using ShapeRenderer
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+        shapeRenderer.setColor(Color.RED);
+        shapeRenderer.rect(player.getX(), player.getY(), player.getWidth(), player.getHeight());
+        shapeRenderer.end();
     }
 
     @Override
@@ -74,8 +62,10 @@ public class FirstScreen implements Screen {
         // In that case, we don't resize anything, and wait for the window to be a normal size before updating.
         if(width <= 0 || height <= 0) return;
 
-        camera.setToOrtho(false, width, height);
-        camera.update();
+        // Set up projection matrix for shape renderer (orthographic, origin bottom-left)
+        Matrix4 projection = new Matrix4();
+        projection.setToOrtho2D(0, 0, width, height);
+        shapeRenderer.setProjectionMatrix(projection);
     }
 
     @Override
