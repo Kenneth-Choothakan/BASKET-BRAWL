@@ -8,7 +8,6 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
@@ -69,12 +68,15 @@ public StartScreen(Main game) {
 
     table = new Table();
     table.setFillParent(true);
+    table.center();
+    // push the centered row slightly to the right
+    table.padTop(3f);
+    table.padLeft(2f);
     stage.addActor(table);
-
-    //table.defaults().pad(2f);
-
-    table.add(startButton).size(3f, 2f);
-    table.add(selectionButton).size(3f, 2f);
+    // Place buttons in one horizontal row centered in the table
+    table.defaults().pad(0.25f);
+    table.add(startButton).size(3f, 2f).center().padRight(2f);
+    table.add(selectionButton).size(3f, 2f).center();
 
     startButton.addListener(new ClickListener() {
         @Override
@@ -90,17 +92,7 @@ public StartScreen(Main game) {
         }
     });
     
-    //TODO: fix sliding animation and positioning
-    startButton.setPosition(100, -100f);
-    selectionButton.setPosition(100, -100f);
-
-
-    float duration = 0.5f;
-    startButton.addAction(Actions.moveTo(2f, -1f, duration));
-    selectionButton.addAction(Actions.moveTo(5f, -1f, duration));
-
-    startButton.setPosition(2f, -1f);
-    selectionButton.setPosition(5f, -1f);
+    // Buttons are positioned by the table; remove manual positioning/actions
 
 
     }
