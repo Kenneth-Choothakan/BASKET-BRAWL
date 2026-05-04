@@ -17,8 +17,8 @@ public class FirstScreen implements Screen {
     private ShapeRenderer shapeRenderer;
     
     public FirstScreen() {
-        // Create player at center of screen (approximate)
-        player = new Player(384, 256);
+        // Create player at center of screen
+        player = new Player(272, 172);
         batch = new SpriteBatch();
         shapeRenderer = new ShapeRenderer();
     }
@@ -30,23 +30,28 @@ public class FirstScreen implements Screen {
 
     @Override
     public void render(float delta) {
-        // Clear screen with black background
-        Gdx.gl.glClearColor(0, 0, 0, 1);
+        // Clear screen with white background
+        Gdx.gl.glClearColor(1, 1, 1, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         
         // Handle WASD input
         Input input = Gdx.input;
         boolean left = input.isKeyPressed(Input.Keys.A);
         boolean right = input.isKeyPressed(Input.Keys.D);
+        boolean shoot = input.isKeyJustPressed(Input.Keys.W);
         
         // Update player position
         player.update(delta, left, right);
         
-        // Draw player using ShapeRenderer
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-        shapeRenderer.setColor(Color.RED);
-        shapeRenderer.rect(player.getX(), player.getY(), player.getWidth(), player.getHeight());
-        shapeRenderer.end();
+        // Start shooting animation if W is pressed
+        if (shoot) {
+            player.startShooting();
+        }
+        
+        // Draw player using sprite
+        batch.begin();
+        player.render(batch);
+        batch.end();
     }
 
     @Override
@@ -59,6 +64,7 @@ public class FirstScreen implements Screen {
         Matrix4 projection = new Matrix4();
         projection.setToOrtho2D(0, 0, width, height);
         shapeRenderer.setProjectionMatrix(projection);
+        batch.setProjectionMatrix(projection);
     }
 
     @Override
