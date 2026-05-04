@@ -49,7 +49,12 @@ public class Player {
         // Load dribbling animation frames
         loadAnimations();
     }
-    
+    public float getPlayerX() {
+        return x;
+    }
+    public float getPlayerY() {
+        return y;
+    }
     private void loadAnimations() {
         try {
             // Load all 3 dribble frames
@@ -112,7 +117,7 @@ public class Player {
             }
         }
         
-        // Update bounds
+        // Update bounds 
         bounds.set(x, y, width, height);
     }
     

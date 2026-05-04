@@ -112,6 +112,6 @@ public class Main extends Game {
     }
 
     public void play(){
-        setScreen(new ShootDemo());
+        setScreen(new FirstScreen());
     }
 }
