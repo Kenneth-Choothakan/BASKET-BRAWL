@@ -2,7 +2,6 @@ package io.github.basket_brawl;
 
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.audio.Music;
 
 
@@ -79,7 +78,7 @@ public class Main extends Game {
         songArray = new Music[] {song1, song2, song3, song4, song5, song6, song7, song8, song9, song10, song11, song12, song14, song15, song16, song17, song18, song19, song20, song21, song22, song23, song24, song25, song26, song27, song28, song29, song30};
         songSelection = (int)(Math.random() * songArray.length);
         music = songArray[songSelection];
-        music.play();
+        //music.play();
     }
 
     @Override
@@ -90,17 +89,17 @@ public class Main extends Game {
     }
 
     private void playMusic(){
-        if(!(music.isPlaying())){
-            songSelection = (int)(Math.random() * songArray.length);
-            music = songArray[songSelection];
-            music.play();
-        }
-        if(Gdx.input.isKeyPressed(Input.Keys.SPACE)) {
-            music.stop();
-            songSelection = (int)(Math.random() * songArray.length);
-            music = songArray[songSelection];
-            music.play();
-        }
+        // if(!(music.isPlaying())){
+        //     songSelection = (int)(Math.random() * songArray.length);
+        //     music = songArray[songSelection];
+        //     music.play();
+        // }
+        // if(Gdx.input.isKeyPressed(Input.Keys.SPACE)) {
+        //     music.stop();
+        //     songSelection = (int)(Math.random() * songArray.length);
+        //     music = songArray[songSelection];
+        //     music.play();
+        // }
     }
 
     public void start(){
