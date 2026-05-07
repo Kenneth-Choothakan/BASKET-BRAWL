@@ -47,6 +47,11 @@ public class FirstScreen implements Screen {
     private boolean shouldMakeShot = false;
     private boolean missHigh = false;
     private float shotPeakHeight = 200f;
+    private boolean madeShotFalling = false;
+    private float madeShotFallTime = 0f;
+    private float madeShotFallX;
+    private float madeShotFallY;
+    private static final float MADE_SHOT_FALL_DURATION = 1f;
     public FirstScreen() {
         // Create player at center of screen
         player = new Player(272, 172);
@@ -69,8 +74,8 @@ public class FirstScreen implements Screen {
 
     @Override
     public void render(float delta) {
-        ballStartX = player.getPlayerX();
-        ballStartY = player.getPlayerY();
+        ballStartX = player.getPlayerX()+60f;
+        ballStartY = player.getPlayerY()+40f;
         shootListener(delta);
         // Clear screen with white background
         Gdx.gl.glClearColor(0.08f, 0.09f, 0.12f, 1f);
@@ -83,9 +88,10 @@ public class FirstScreen implements Screen {
         Input input = Gdx.input;
         boolean left = input.isKeyPressed(Input.Keys.A);
         boolean right = input.isKeyPressed(Input.Keys.D);
+        boolean shootingHeld = input.isKeyPressed(Input.Keys.W);
         boolean shoot = input.isKeyJustPressed(Input.Keys.W);
         // Update player position
-        player.update(delta, left, right);
+        player.update(delta, left, right, shootingHeld);
         
         // Start shooting animation if W is pressed
         if (shoot) {
@@ -184,7 +190,7 @@ public class FirstScreen implements Screen {
         shapeRenderer.rectLine(barX + BAR_WIDTH, barY, barX + BAR_WIDTH, barY + BAR_HEIGHT, transparency);
 
         // 3 pointer
-        if (distanceFromBasket > 10 && distanceFromBasket < 50) {
+        if (player.getPlayerX() < 600f) {
             shootingMargins = shootingMargin3Pointer;
             shapeRenderer.setColor(0.2f, 0.85f, 0.45f, transparency-0.5f);
             shapeRenderer.rect(barX, barY + 150f, BAR_WIDTH, 15f);
@@ -195,7 +201,7 @@ public class FirstScreen implements Screen {
         }
 
         // 2 pointer
-        if (distanceFromBasket > 0 && distanceFromBasket < 10) {
+        if (player.getPlayerX() > 600f) {
             shootingMargins = shootingMargin2Pointer;
             shapeRenderer.setColor(0.2f, 0.85f, 0.45f, transparency-0.5f);
             shapeRenderer.rect(barX, barY + 100f, BAR_WIDTH, 40f);
@@ -219,7 +225,10 @@ public class FirstScreen implements Screen {
 
         if (isTrajectoryActive) {
             float t = trajectoryTime / TRAJECTORY_DURATION;
-            float targetHoopX = hoopX + 220f; // Center of hoop
+            float targetHoopX = hoopX + 150f; // Center of hoop
+            if (missHigh && !shouldMakeShot) {
+                targetHoopX += 600f;
+            }
             float ballX = ballStartX + (targetHoopX - ballStartX) * t;
             float targetY = hoopY + 250f;
 
@@ -229,11 +238,17 @@ public class FirstScreen implements Screen {
             } else if (missHigh) {
                 ballY = ballStartY + (targetY + 150f - ballStartY) * t + MathUtils.sin(t * MathUtils.PI) * (shotPeakHeight + 80f);
             } else {
-                ballY = ballStartY + (targetY - 150f - ballStartY) * t + MathUtils.sin(t * MathUtils.PI) * (shotPeakHeight + 40f);
+                ballY = ballStartY + (targetY - 200f - ballStartY) * t + MathUtils.sin(t * MathUtils.PI) * (shotPeakHeight + 40f);
             }
 
             float ballSize = 50f;
             spriteBatch.draw(basketballTexture, ballX - ballSize / 2f, ballY - ballSize / 2f, ballSize, ballSize);
+        } else if (madeShotFalling && madeShotFallTime < MADE_SHOT_FALL_DURATION) {
+            float fallProgress = MathUtils.clamp(madeShotFallTime / MADE_SHOT_FALL_DURATION, 0f, 1f);
+            float floorY = 0f;
+            float ballY = madeShotFallY - (madeShotFallY - floorY) * (fallProgress * fallProgress);
+            float ballSize = 50f;
+            spriteBatch.draw(basketballTexture, madeShotFallX - ballSize / 2f, ballY - ballSize / 2f, ballSize, ballSize);
         }
 
         spriteBatch.end();
@@ -249,6 +264,8 @@ public class FirstScreen implements Screen {
         } else if (wasHolding && canShoot == true) {
             timeSinceRelease = 0f;
             transparency = 1f;
+            madeShotFalling = false;
+            madeShotFallTime = 0f;
             String shotResult = getShotResult(shootingMargins, chargeAmount);
             System.out.println(shotResult);
 
@@ -297,6 +314,20 @@ public class FirstScreen implements Screen {
             if (trajectoryTime >= TRAJECTORY_DURATION) {
                 isTrajectoryActive = false;
                 trajectoryTime = 0f;
+                if (shouldMakeShot) {
+                    madeShotFalling = true;
+                    madeShotFallTime = 0f;
+                    madeShotFallX = camera.viewportWidth - 500f + 150f;
+                    madeShotFallY = camera.viewportHeight / 2f - 300f + 250f;
+                }
+            }
+        }
+
+        if (madeShotFalling) {
+            madeShotFallTime += delta;
+            if (madeShotFallTime >= MADE_SHOT_FALL_DURATION) {
+                madeShotFalling = false;
+                madeShotFallTime = 0f;
             }
         }
     }

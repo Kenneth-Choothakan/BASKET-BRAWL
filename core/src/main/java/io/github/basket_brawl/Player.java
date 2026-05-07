@@ -82,7 +82,7 @@ public class Player {
         }
     }
     
-    public void update(float delta, boolean left, boolean right) {
+    public void update(float delta, boolean left, boolean right, boolean shootingHeld) {
         // Calculate movement - only allow if not shooting or holding after shooting
         float moveX = 0;
         
@@ -97,8 +97,14 @@ public class Player {
         // Always update dribble animation time so it resumes smoothly later
         animationTime += delta;
         
+        // Keep the first shooting frame visible while W is held.
+        // Once W is released, advance the rest of the shooting animation.
+        if (isShooting && shootingHeld) {
+            shootingAnimationTime = 0f;
+        }
+
         // Update shooting animation if active
-        if (isShooting) {
+        if (isShooting && !shootingHeld) {
             shootingAnimationTime += delta * SHOOT_TRANSITION_SMOOTHING;
             if (shootingAnimation.isAnimationFinished(shootingAnimationTime)) {
                 isShooting = false;
