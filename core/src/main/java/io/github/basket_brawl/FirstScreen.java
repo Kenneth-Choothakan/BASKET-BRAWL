@@ -420,6 +420,9 @@ public class FirstScreen implements Screen {
         }
 
         if (isHolding && canShoot == true) {
+            if (chargeAmount == 1f) {
+                chargeAmount = 0f;
+            }
             chargeAmount = MathUtils.clamp(chargeAmount + delta * CHARGE_RATE, 0f, 1f);
             timeSinceRelease = 0f;
             transparency = 1f;
@@ -563,6 +566,9 @@ public class FirstScreen implements Screen {
         }
 
         if (isHolding && canShoot2 == true) {
+            if (chargeAmount2 == 1f) {
+                chargeAmount2 = 0f;
+            }
             chargeAmount2 = MathUtils.clamp(chargeAmount2 + delta * CHARGE_RATE, 0f, 1f);
             timeSinceRelease2 = 0f;
             transparency2 = 1f;
