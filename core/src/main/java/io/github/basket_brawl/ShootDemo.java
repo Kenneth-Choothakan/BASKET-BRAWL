@@ -52,7 +52,7 @@ public class ShootDemo implements Screen {
         // Load sprites
         spriteBatch = new SpriteBatch();
         basketballTexture = new Texture("BasketBall.png");
-        hoopTexture = new Texture("BasketBallHoop.png");
+        hoopTexture = new Texture("Court/BasketBallHoop.png");
     }
 
     @Override

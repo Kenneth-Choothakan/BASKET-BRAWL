@@ -7,6 +7,8 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.MathUtils;
@@ -29,9 +31,12 @@ public class FirstScreen implements Screen {
     private static final float[][] shootingMargin3Pointer = {{0.675f,0.749f}, {0.575f, 0.675f}, {0.749f, 0.852f}};
     private final OrthographicCamera camera = new OrthographicCamera();
     private SpriteBatch spriteBatch;
+    private BitmapFont scoreFont;
+    private final GlyphLayout scoreLayout = new GlyphLayout();
     private Texture basketballTexture;
     private Texture hoopTexture;
     private Texture hoopTextureLeft;
+    private Texture backgroundCourtTexture;
     
     // Player 1 shot variables
     private float chargeAmount;
@@ -63,6 +68,11 @@ public class FirstScreen implements Screen {
     private float madeShotFallX;
     private float madeShotFallY;
     private static final float MADE_SHOT_FALL_DURATION = 1f;
+    // Scoring: separate variables for 3-point and 2-point totals per player
+    private int player1ThreePointScore = 0;
+    private int player1TwoPointScore = 0;
+    private int player2ThreePointScore = 0;
+    private int player2TwoPointScore = 0;
     
     // Trajectory tracking variables for Player 2
     private boolean isTrajectoryActive2 = false;
@@ -101,9 +111,16 @@ public class FirstScreen implements Screen {
         
         // Load sprites
         spriteBatch = new SpriteBatch();
+        scoreFont = new BitmapFont();
+        scoreFont.getData().setScale(6f);
+        scoreFont.setUseIntegerPositions(false);
+        for (com.badlogic.gdx.graphics.g2d.TextureRegion region : scoreFont.getRegions()) {
+            region.getTexture().setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
+        }
         basketballTexture = new Texture("BasketBall.png");
-        hoopTexture = new Texture("BasketBallHoop.png");
-        hoopTextureLeft = new Texture("BasketBallHoop.png");
+        hoopTexture = new Texture("Court/BasketBallHoop.png");
+        hoopTextureLeft = new Texture("Court/BasketBallHoop.png");
+        backgroundCourtTexture = new Texture("Court/BackgroundCourt.png");
     }
 
     @Override
@@ -120,17 +137,28 @@ public class FirstScreen implements Screen {
         } else {
             shootListener2(delta);
         }
-        
+         
         // Clear screen with white background
         Gdx.gl.glClearColor(0.08f, 0.09f, 0.12f, 1f);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+        // Draw background court image stretched to viewport
+        if (backgroundCourtTexture != null) {
+            spriteBatch.setProjectionMatrix(camera.combined);
+            spriteBatch.begin();
+            spriteBatch.draw(backgroundCourtTexture, 0, -50f, camera.viewportWidth, camera.viewportHeight);
+            spriteBatch.end();
+        }
+
+        renderScoreHud();
+
         Gdx.gl.glEnable(GL20.GL_BLEND);
         Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+
         
         Input input = Gdx.input;
         renderChargeBar(player1HasBall && input.isKeyPressed(Input.Keys.W) && !cancelShotPending1, transparency, true);
         renderChargeBar(!player1HasBall && input.isKeyPressed(Input.Keys.UP) && !cancelShotPending2, transparency2, false);
-        renderBasketballShot(delta);
+        renderBasketballShot();
         
         // Handle Player inputs with dynamic bindings depending on possession/mode
         boolean left1 = input.isKeyPressed(Input.Keys.A);
@@ -231,6 +259,29 @@ public class FirstScreen implements Screen {
         if (hoopTextureLeft != null) {
             hoopTextureLeft.dispose();
         }
+        if (backgroundCourtTexture != null) {
+            backgroundCourtTexture.dispose();
+        }
+        if (scoreFont != null) {
+            scoreFont.dispose();
+        }
+    }
+
+    private void renderScoreHud() {
+        if (scoreFont == null) {
+            return;
+        }
+
+        int player1Score = player1ThreePointScore + player1TwoPointScore;
+        int player2Score = player2ThreePointScore + player2TwoPointScore;
+        String scoreText = "Score: " + player1Score + " - " + player2Score;
+        scoreLayout.setText(scoreFont, scoreText);
+        float scoreX = (camera.viewportWidth - scoreLayout.width) / 2f;
+        float scoreY = camera.viewportHeight - 50f;
+
+        batch.begin();
+        scoreFont.draw(batch, scoreText, scoreX, scoreY);
+        batch.end();
     }
     public String getShotResult(float[][] shootingMargins, float chargeAmount) {
         if (chargeAmount >= shootingMargins[0][0] && chargeAmount <= shootingMargins[0][1]) {
@@ -276,7 +327,7 @@ public class FirstScreen implements Screen {
         Player playerRef = isPlayer1 ? player : player2;
         
         // 3 pointer
-        if (playerRef.getPlayerX() < 600f) {
+        if (playerRef.getPlayerX() <= 900f && isPlayer1 || playerRef.getPlayerX() >= 900f && !isPlayer1 ) {
             shapeRenderer.setColor(0.2f, 0.85f, 0.45f, transparency-0.5f);
             shapeRenderer.rect(barX, barY + 150f, BAR_WIDTH, 15f);
             shapeRenderer.setColor(1f, 1f, 0f, transparency-0.5f);
@@ -286,7 +337,7 @@ public class FirstScreen implements Screen {
         }
 
         // 2 pointer
-        if (playerRef.getPlayerX() > 600f) {
+        if (playerRef.getPlayerX() > 900f && isPlayer1 || playerRef.getPlayerX() < 900f && !isPlayer1) {
             shapeRenderer.setColor(0.2f, 0.85f, 0.45f, transparency-0.5f);
             shapeRenderer.rect(barX, barY + 100f, BAR_WIDTH, 40f);
             shapeRenderer.setColor(1f, 1f, 0f, transparency-0.5f);
@@ -298,7 +349,7 @@ public class FirstScreen implements Screen {
         shapeRenderer.end();
     }
 
-    private void renderBasketballShot(float delta) {
+    private void renderBasketballShot() {
         spriteBatch.setProjectionMatrix(camera.combined);
         spriteBatch.begin();
         spriteBatch.setColor(1f, 1f, 1f, 1f);
@@ -427,13 +478,14 @@ public class FirstScreen implements Screen {
             timeSinceRelease = 0f;
             transparency = 1f;
         } else if (wasHolding && canShoot == true) {
+            canShoot = false;
             timeSinceRelease = 0f;
             transparency = 1f;
             madeShotFalling = false;
             madeShotFallTime = 0f;
             
             // Determine shooting margins for player 1
-            if (player.getPlayerX() < 600f) {
+            if (player.getPlayerX() < 900f) {
                 shootingMargins = shootingMargin3Pointer;
             } else {
                 shootingMargins = shootingMargin2Pointer;
@@ -447,6 +499,8 @@ public class FirstScreen implements Screen {
             trajectoryTime = 0f;
             ballStartX = player.getPlayerX() + 60f;
             ballStartY = player.getPlayerY() + 40f;
+            // Prevent shooting again until possession changes
+            canShoot = false;
 
             // Determine shot outcome once on release so the trajectory stays stable.
             boolean isGreenShot = shotResult.equals("Green");
@@ -477,7 +531,6 @@ public class FirstScreen implements Screen {
         if (timeSinceRelease > BAR_HOLD_TIME) {
             chargeAmount = 0f;
             transparency = 1f;
-            canShoot = true;
         }
 
         wasHolding = isHolding;
@@ -514,6 +567,12 @@ public class FirstScreen implements Screen {
                 isTrajectoryActive = false;
                 trajectoryTime = 0f;
                 if (shouldMakeShot) {
+                    // Award points to player 1 based on whether this was a 3-pointer or 2-pointer
+                    if (shootingMargins == shootingMargin3Pointer) {
+                        player1ThreePointScore += 3;
+                    } else {
+                        player1TwoPointScore += 2;
+                    }
                     madeShotFalling = true;
                     madeShotFallTime = 0f;
                     madeShotFallX = camera.viewportWidth - 500f + 300f;
@@ -573,13 +632,14 @@ public class FirstScreen implements Screen {
             timeSinceRelease2 = 0f;
             transparency2 = 1f;
         } else if (wasHolding2 && canShoot2 == true) {
+            canShoot2 = false;
             timeSinceRelease2 = 0f;
             transparency2 = 1f;
             madeShotFalling2 = false;
             madeShotFallTime2 = 0f;
             
             // Determine shooting margins for player 2
-            if (player2.getPlayerX() < 600f) {
+            if (player2.getPlayerX() > 900f) {
                 shootingMargins2 = shootingMargin3Pointer;
             } else {
                 shootingMargins2 = shootingMargin2Pointer;
@@ -593,6 +653,8 @@ public class FirstScreen implements Screen {
             trajectoryTime2 = 0f;
             ballStartX2 = player2.getPlayerX() + 60f;
             ballStartY2 = player2.getPlayerY() + 40f;
+            // Prevent shooting again until possession changes
+            canShoot2 = false;
 
             // Determine shot outcome once on release so the trajectory stays stable.
             boolean isGreenShot = shotResult.equals("Green");
@@ -660,6 +722,12 @@ public class FirstScreen implements Screen {
                 isTrajectoryActive2 = false;
                 trajectoryTime2 = 0f;
                 if (shouldMakeShot2) {
+                    // Award points to player 2 based on whether this was a 3-pointer or 2-pointer
+                    if (shootingMargins2 == shootingMargin3Pointer) {
+                        player2ThreePointScore += 3;
+                    } else {
+                        player2TwoPointScore += 2;
+                    }
                     madeShotFalling2 = true;
                     madeShotFallTime2 = 0f;
                     madeShotFallX2 = 250f;
