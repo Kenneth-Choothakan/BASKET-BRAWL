@@ -115,9 +115,7 @@ public StartScreen(Main game) {
 
     }
 
-    private void logic() {
-
-    }
+    private void logic() {}
 
     private void draw() {
         clear(Color.BLACK);
