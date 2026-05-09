@@ -13,6 +13,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.scenes.scene2d.Stage;
 
 /** First screen of the application. Displayed after the application is created. */
 public class FirstScreen implements Screen {
@@ -91,6 +92,7 @@ public class FirstScreen implements Screen {
     private int pendingPossession = 0; // 0 = none, 1 = to player1, 2 = to player2
     private boolean cancelShotPending1 = false;
     private boolean cancelShotPending2 = false;
+    private Stage stage;
 
     public FirstScreen() {
         // Create player 1 at left-center of screen
@@ -100,6 +102,9 @@ public class FirstScreen implements Screen {
         batch = new SpriteBatch();
         shapeRenderer = new ShapeRenderer();
         syncPlayerModes();
+        stage = new Stage();
+        Gdx.input.setInputProcessor(this.stage);
+
     }
     
     @Override

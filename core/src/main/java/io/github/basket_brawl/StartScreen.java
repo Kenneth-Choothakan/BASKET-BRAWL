@@ -85,6 +85,7 @@ public StartScreen(Main game) {
         @Override
         public void clicked(InputEvent event, float x, float y) {
             game.play();
+            //Gdx.input.setInputProcessor(null);
             sound.play(1.5f);
         }
     });
@@ -93,6 +94,7 @@ public StartScreen(Main game) {
         @Override
         public void clicked(InputEvent event, float x, float y) {
             game.Selection();
+            //Gdx.input.setInputProcessor(null);
             sound.play(1.5f);
         }
     });
@@ -161,6 +163,23 @@ public StartScreen(Main game) {
 
     @Override
     public void dispose() {
-        // Destroy screen's assets here.
-    }
+    backgroundTexture.dispose();
+    startTexture.dispose();
+    selectionTexture.dispose();
+    spriteBatch.dispose();
+    //viewport.dispose();
+    skin.dispose();
+    stage.dispose();
+    //table.dispose();
+    //startButton.dispose();
+    //selectionButton.dispose();
+    //startDrawable.dispose();
+    //selectionDrawable.dispose();
+    game.dispose();
+    startHoverTex.dispose();
+    selectHoverTex.dispose();
+    //startStyle.dispose();
+    //selectStyle.dispose();
+    sound.dispose();
+}
 }

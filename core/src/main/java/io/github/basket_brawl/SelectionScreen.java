@@ -103,6 +103,8 @@ public class SelectionScreen implements Screen {
         spriteBatch = new SpriteBatch();
         viewport = new FitViewport(800, 500);
         stage = new Stage(viewport, spriteBatch);
+        Gdx.input.setInputProcessor(this.stage);
+
         mysteryTexture = new Texture(Gdx.files.internal("6.jpg"));
         CurrySelection = new Texture(Gdx.files.internal("7.jpg"));
         BrandonSelection = new Texture(Gdx.files.internal("13.jpg"));
@@ -616,5 +618,21 @@ public class SelectionScreen implements Screen {
     @Override
     public void dispose() {
         // Destroy screen's assets here.
+        backgroundTexture.dispose();
+        mysteryTexture.dispose();
+        CurrySelection.dispose();
+        BrandonSelection.dispose();
+        ManvirSelection.dispose();
+        VishalSelection.dispose();
+        TatumSelection.dispose();
+        DurantSelection.dispose();
+        ButlerSelection.dispose();
+        LebronSelection.dispose();
+        homeTexture.dispose();
+        KDTexture.dispose();
+        SCTexture.dispose();
+        LBJTexture.dispose();
+        JTTexture.dispose();
+
     }
 }
