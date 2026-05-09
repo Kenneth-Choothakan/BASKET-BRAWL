@@ -2,6 +2,7 @@ package io.github.basket_brawl;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -91,10 +92,13 @@ public class SelectionScreen implements Screen {
     ImageButton Player2;
     TextureRegionDrawable Player2Drawable;
 
+    Sound sound;
+
 
     
     public SelectionScreen(Main game) {
         this.game = game;
+        sound = Gdx.audio.newSound(Gdx.files.internal("Music/button.wav"));
         backgroundTexture = new Texture(Gdx.files.internal("SelectionBackground.png"));
         spriteBatch = new SpriteBatch();
         viewport = new FitViewport(800, 500);
@@ -128,6 +132,7 @@ public class SelectionScreen implements Screen {
         @Override
         public void clicked(InputEvent event, float x, float y) {
             game.start();
+            sound.play(1.5f);
         }
         });
 
@@ -148,7 +153,9 @@ public class SelectionScreen implements Screen {
         Tatumbool = false;
         Durantbool = true;
         Butlerbool = false;
-        Lebronbool = false;        }
+        Lebronbool = false;
+        sound.play(1.5f);
+            }
         });
 
         SCTexture = new Texture(Gdx.files.internal("Curry1.png"));
@@ -167,7 +174,9 @@ public class SelectionScreen implements Screen {
         Tatumbool = false;
         Durantbool = false;
         Butlerbool = false;
-        Lebronbool = false;        }
+        Lebronbool = false;
+        sound.play(1.5f);
+            }
         });
 
         LBJTexture = new Texture(Gdx.files.internal("LBJ1.png"));
@@ -186,7 +195,8 @@ public class SelectionScreen implements Screen {
         Tatumbool = false;
         Durantbool = false;
         Butlerbool = false;
-        Lebronbool = true;        
+        Lebronbool = true; 
+        sound.play(1.5f);       
     }
         });
 
@@ -206,7 +216,9 @@ public class SelectionScreen implements Screen {
         Tatumbool = true;
         Durantbool = false;
         Butlerbool = false;
-        Lebronbool = false;        }
+        Lebronbool = false;
+        sound.play(1.5f);
+            }
         });
         //--------------
         ButlerTexture = new Texture(Gdx.files.internal("Butler1.png"));
@@ -225,7 +237,9 @@ public class SelectionScreen implements Screen {
         Tatumbool = false;
         Durantbool = false;
         Butlerbool = true;
-        Lebronbool = false;        }
+        Lebronbool = false;
+        sound.play(1.5f);        
+        }
         });
 
         ManvirTexture = new Texture(Gdx.files.internal("Manvir1.png"));
@@ -244,7 +258,8 @@ public class SelectionScreen implements Screen {
         Tatumbool = false;
         Durantbool = false;
         Butlerbool = false;
-        Lebronbool = false;        }
+        Lebronbool = false;
+    sound.play(1.5f);        }
         });
 
         VishalTexture = new Texture(Gdx.files.internal("Vishal1.png"));
@@ -263,7 +278,8 @@ public class SelectionScreen implements Screen {
         Tatumbool = false;
         Durantbool = false;
         Butlerbool = false;
-        Lebronbool = false;        }
+        Lebronbool = false;
+    sound.play(1.5f);        }
         });
 
         BrandonTexture = new Texture(Gdx.files.internal("Brandon1.png"));
@@ -282,7 +298,8 @@ public class SelectionScreen implements Screen {
         Tatumbool = false;
         Durantbool = false;
         Butlerbool = false;
-        Lebronbool = false;        }
+        Lebronbool = false;
+    sound.play(1.5f);        }
         });
 
 
@@ -296,6 +313,7 @@ public class SelectionScreen implements Screen {
         Player1.addListener(new ClickListener() {
         @Override
         public void clicked(InputEvent event, float x, float y) {
+        sound.play(1.5f);
         }
         });
 
@@ -310,6 +328,7 @@ public class SelectionScreen implements Screen {
         Player2.addListener(new ClickListener() {
         @Override
         public void clicked(InputEvent event, float x, float y) {
+        sound.play(1.5f);
         }
         });
         Gdx.input.setInputProcessor(stage);

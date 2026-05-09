@@ -2,6 +2,7 @@ package io.github.basket_brawl;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -35,12 +36,14 @@ public class StartScreen implements Screen {
     Texture selectHoverTex;
     ImageButton.ImageButtonStyle startStyle;
     ImageButton.ImageButtonStyle selectStyle;
+    Sound sound;
+
 
 
     
 public StartScreen(Main game) {
     this.game = game;
-    
+    sound = Gdx.audio.newSound(Gdx.files.internal("Music/button.wav"));
     backgroundTexture = new Texture(Gdx.files.internal("newStartScreen.jpg"));
     startTexture = new Texture(Gdx.files.internal("button_centered_2.png"));
     selectionTexture = new Texture(Gdx.files.internal("button_centered_4.png"));
@@ -82,6 +85,7 @@ public StartScreen(Main game) {
         @Override
         public void clicked(InputEvent event, float x, float y) {
             game.play();
+            sound.play(1.5f);
         }
     });
 
@@ -89,6 +93,7 @@ public StartScreen(Main game) {
         @Override
         public void clicked(InputEvent event, float x, float y) {
             game.Selection();
+            sound.play(1.5f);
         }
     });
     
