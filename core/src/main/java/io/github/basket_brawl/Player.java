@@ -33,13 +33,17 @@ public class Player {
     private boolean shootingFinished = false;
     private boolean isMoving = false;
     private boolean blockJumpActive = false;
+    private boolean blockJumpWindupActive = false;
     private float blockJumpTime = 0f;
+    private float blockJumpWindupTime = 0f;
     private float blockJumpStartX = 0f;
     private float blockJumpStartY = 0f;
     private float blockJumpTargetX = 0f;
+    private float blockJumpQueuedTargetX = 0f;
+    private static final float BLOCK_JUMP_WINDUP_DURATION = 0.12f;
     private static final float BLOCK_JUMP_DURATION = 1.05f;
     private static final float BLOCK_JUMP_HEIGHT = 400f;
-    private static final float BLOCK_JUMP_HORIZONTAL_MULTIPLIER = 1.5f;
+    private static final float BLOCK_JUMP_DISTANCE = 240f;
     private float shootingAnimationTime = 0;
     private float shootingHoldTime = 0;
     private static final float SHOOT_HOLD_DURATION = 0.15f; // Briefly freeze on the last shot frame before returning to dribble
@@ -110,6 +114,24 @@ public class Player {
     }
     
     public void update(float delta, boolean left, boolean right, boolean shootingHeld) {
+        if (blockJumpWindupActive) {
+            blockJumpWindupTime += delta/1.5;
+            x = blockJumpStartX;
+            y = baseY;
+
+            if (blockJumpWindupTime >= BLOCK_JUMP_WINDUP_DURATION) {
+                blockJumpWindupActive = false;
+                blockJumpActive = true;
+                blockJumpTime = 0f;
+                blockJumpStartX = x;
+                blockJumpStartY = baseY;
+                blockJumpTargetX = blockJumpQueuedTargetX;
+            }
+
+            bounds.set(x, y, width, height);
+            return;
+        }
+
         if (blockJumpActive) {
             blockJumpTime += delta;
             float progress = Math.min(blockJumpTime / BLOCK_JUMP_DURATION, 1f);
@@ -185,6 +207,8 @@ public class Player {
         } else if (shootingFinished && shootingAnimation != null) {
             // Show last frame of shooting animation while holding
             currentFrame = shootingAnimation.getKeyFrame(shootingAnimationTime, false);
+        } else if (defenseMode && blockJumpWindupActive && blockFrames != null) {
+            currentFrame = blockFrames[0];
         } else if (defenseMode && blockJumpActive && blockFrames != null) {
             float jumpProgress = Math.min(blockJumpTime / BLOCK_JUMP_DURATION, 1f);
             if (jumpProgress < 0.15f) {
@@ -265,7 +289,9 @@ public class Player {
         }
 
         this.defenseMode = defenseMode;
+        blockJumpWindupActive = false;
         blockJumpActive = false;
+        blockJumpWindupTime = 0f;
         blockJumpTime = 0f;
         isShooting = false;
         shootingFinished = false;
@@ -282,18 +308,18 @@ public class Player {
     }
 
     public void startBlockJumpToward(float targetX) {
-        if (!defenseMode || blockJumpActive) {
+        if (!defenseMode || blockJumpActive || blockJumpWindupActive) {
             return;
         }
 
-        blockJumpActive = true;
-        blockJumpTime = 0f;
-        blockJumpStartX = x;
-        blockJumpStartY = baseY;
-
         float deltaX = targetX - x;
         float jumpDirection = deltaX < 0f ? -1f : 1f;
-        blockJumpTargetX = x + jumpDirection * BLOCK_JUMP_HEIGHT * BLOCK_JUMP_HORIZONTAL_MULTIPLIER;
+        blockJumpTargetX = x + jumpDirection * BLOCK_JUMP_DISTANCE;
+        blockJumpQueuedTargetX = blockJumpTargetX;
+        blockJumpStartX = x;
+        blockJumpStartY = baseY;
+        blockJumpWindupTime = 0f;
+        blockJumpWindupActive = true;
 
         isShooting = false;
         shootingFinished = false;

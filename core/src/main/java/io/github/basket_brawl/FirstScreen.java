@@ -86,9 +86,12 @@ public class FirstScreen implements Screen {
     private float madeShotFallTime2 = 0f;
     private float madeShotFallX2;
     private float madeShotFallY2;
-    private static final float CATCH_HORIZONTAL_PADDING = 30f;
-    private static final float CATCH_VERTICAL_PADDING = 40f;
+    private static final float CATCH_HORIZONTAL_PADDING = 18f;
+    private static final float CATCH_VERTICAL_PADDING = 24f;
     private int pendingPossession = 0; // 0 = none, 1 = to player1, 2 = to player2
+    private static final float POSSESSION_SWAP_COOLDOWN = 0.5f;
+    private float possessionSwapCooldown = 0f;
+    private boolean playersWereTouching = false;
     private boolean cancelShotPending1 = false;
     private boolean cancelShotPending2 = false;
 
@@ -126,6 +129,9 @@ public class FirstScreen implements Screen {
     @Override
     public void render(float delta) {
         syncPlayerModes();
+        if (possessionSwapCooldown > 0f) {
+            possessionSwapCooldown = Math.max(0f, possessionSwapCooldown - delta);
+        }
         // Update ball start positions for both players
         ballStartX = player.getPlayerX() + 60f;
         ballStartY = player.getPlayerY() + 40f;
@@ -199,6 +205,8 @@ public class FirstScreen implements Screen {
             switchPossessionToPlayer1();
             pendingPossession = 0;
         }
+
+        handlePlayerContactPossessionSwap();
 
         // Start shooting animation for the player who has the ball
         if (shoot1) player.startShooting();
@@ -772,6 +780,23 @@ public class FirstScreen implements Screen {
         player1HasBall = false;
         resetShotState();
         syncPlayerModes();
+    }
+
+    private void handlePlayerContactPossessionSwap() {
+        float contactPadding = 14f;
+        boolean playersTouching = player.getPlayerX() + player.getWidth() - contactPadding >= player2.getPlayerX()
+            && player.getPlayerX() <= player2.getPlayerX() + player2.getWidth() - contactPadding
+            && player.getPlayerY() + player.getHeight() - contactPadding >= player2.getPlayerY()
+            && player.getPlayerY() <= player2.getPlayerY() + player2.getHeight() - contactPadding;
+
+        if (playersTouching && !playersWereTouching && possessionSwapCooldown <= 0f) {
+            player1HasBall = !player1HasBall;
+            resetShotState();
+            syncPlayerModes();
+            possessionSwapCooldown = POSSESSION_SWAP_COOLDOWN;
+        }
+
+        playersWereTouching = playersTouching;
     }
 
     private void resetShotState() {
