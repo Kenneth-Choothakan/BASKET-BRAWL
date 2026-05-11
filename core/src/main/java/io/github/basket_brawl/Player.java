@@ -77,11 +77,10 @@ public class Player {
             offenseDribbleFrames[1] = new TextureRegion(new Texture("Steph/Dribble/drib 2.png"));
             offenseDribbleFrames[2] = new TextureRegion(new Texture("Steph/Dribble/drib 3.png"));
 
-            defenseDribbleFrames = new TextureRegion[4];
+            defenseDribbleFrames = new TextureRegion[3];
             defenseDribbleFrames[0] = new TextureRegion(new Texture("Steph/Defense/shuffle 2.png"));
             defenseDribbleFrames[1] = new TextureRegion(new Texture("Steph/Defense/shuffle 3.png"));
-            defenseDribbleFrames[2] = new TextureRegion(new Texture("Steph/Defense/shuffle 4.png"));
-            defenseDribbleFrames[3] = new TextureRegion(new Texture("Steph/Defense/shuffle 5.png"));
+            defenseDribbleFrames[2] = new TextureRegion(new Texture("Steph/Defense/shuffle 5.png"));
 
             idleFrame = new TextureRegion(new Texture("Steph/Defense/idle.png"));
             blockFrames = new TextureRegion[5];
@@ -236,8 +235,8 @@ public class Player {
             currentFrame.setV(0);
             currentFrame.setU2(1);
             currentFrame.setV2(1);
-                    float frameWidth = currentFrame.getRegionWidth();
-                    float frameHeight = currentFrame.getRegionHeight();
+                    float frameWidth = 256; // Fixed size for consistent scaling
+                    float frameHeight = 256;
                     float scale = Math.min(width / frameWidth, height / frameHeight);
                     float drawWidth = frameWidth * scale;
                     float drawHeight = frameHeight * scale;

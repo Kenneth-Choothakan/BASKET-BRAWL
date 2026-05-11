@@ -40,6 +40,22 @@ public class Main extends Game {
     Music song28;
     Music song29;
     Music song30;
+    Music song31;
+    Music song32;
+    Music song33;
+    Music song34;
+    Music song35;
+    Music song36;
+    Music song37;
+    Music song38;
+    Music song39;
+    Music song40;
+    Music song41;
+    Music song42;
+    Music song43;
+    Music song44;
+    Music song45;
+    boolean musicStarted;
     Music[] songArray;
 
     @Override
@@ -76,7 +92,25 @@ public class Main extends Game {
         song28 = Gdx.audio.newMusic(Gdx.files.internal("Music/JC.mp3"));
         song29 = Gdx.audio.newMusic(Gdx.files.internal("Music/BOB.mp3"));
         song30 = Gdx.audio.newMusic(Gdx.files.internal("Music/PM.mp3"));
-        songArray = new Music[] {song1, song2, song3, song4, song5, song6, song7, song8, song9, song10, song11, song12, song14, song15, song16, song17, song18, song19, song20, song21, song22, song23, song24, song25, song26, song27, song28, song29, song30};
+
+        song31 = Gdx.audio.newMusic(Gdx.files.internal("Music/Chinese.mp3"));
+        song32 = Gdx.audio.newMusic(Gdx.files.internal("Music/Luther.mp3"));
+        song33 = Gdx.audio.newMusic(Gdx.files.internal("Music/Stars.mp3"));
+        song34 = Gdx.audio.newMusic(Gdx.files.internal("Music/ATS.mp3"));
+        song35 = Gdx.audio.newMusic(Gdx.files.internal("Music/Redevous.mp3"));
+        song36 = Gdx.audio.newMusic(Gdx.files.internal("Music/2AM.mp3"));
+        song37 = Gdx.audio.newMusic(Gdx.files.internal("Music/E85.mp3"));
+        song38 = Gdx.audio.newMusic(Gdx.files.internal("Music/ATM.mp3"));
+        song39 = Gdx.audio.newMusic(Gdx.files.internal("Music/LYM.mp3"));
+        song40 = Gdx.audio.newMusic(Gdx.files.internal("Music/Company.mp3"));
+        song41 = Gdx.audio.newMusic(Gdx.files.internal("Music/FWU.mp3"));
+        song42 = Gdx.audio.newMusic(Gdx.files.internal("Music/Time.mp3"));
+        song43 = Gdx.audio.newMusic(Gdx.files.internal("Music/HIS.mp3"));
+        song44 = Gdx.audio.newMusic(Gdx.files.internal("Music/You.mp3"));
+        song45 = Gdx.audio.newMusic(Gdx.files.internal("Music/Kryptonite.mp3"));
+
+        songArray = new Music[] {song1, song2, song3, song4, song5, song6, song7, song8, song9, song10, song11, song12, song14, song15, song16, song17, song18, song19, song20, song21, song22, song23, song24, song25, song26, song27, song28, song29, song30, song31, song32, song33, song34, song35, song36, song37, song38, song39, song40, song41, song42, song43, song44, song45};
+        //songSelection = (int)(Math.random() * songArray.length);
         songSelection = (int)(Math.random() * songArray.length);
         music = songArray[songSelection];
         music.play();
@@ -108,7 +142,7 @@ public class Main extends Game {
     }
 
     public void Selection(){
-        setScreen(new SelectionScreen());
+        setScreen(new SelectionScreen(this));
     }
 
     public void play(){
