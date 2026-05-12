@@ -14,7 +14,7 @@ public class Player {
     private float baseY;
     private final float width = 256;
     private final float height = 256;
-    private final float speed = 200f; // pixels per second
+    private final float speed = 400f; // pixels per second
     private boolean defenseMode;
     
     private Rectangle bounds;
@@ -43,7 +43,7 @@ public class Player {
     private static final float BLOCK_JUMP_WINDUP_DURATION = 0.12f;
     private static final float BLOCK_JUMP_DURATION = 1.05f;
     private static final float BLOCK_JUMP_HEIGHT = 400f;
-    private static final float BLOCK_JUMP_DISTANCE = 240f;
+    private static final float BLOCK_JUMP_DISTANCE = 680f;
     private float shootingAnimationTime = 0;
     private float shootingHoldTime = 0;
     private static final float SHOOT_HOLD_DURATION = 0.15f; // Briefly freeze on the last shot frame before returning to dribble

@@ -213,6 +213,9 @@ public class FirstScreen implements Screen {
 
         handlePlayerContactPossessionSwap();
 
+        // Keep modes possession-based so the current defender can still block during ball flight.
+        syncPlayerModes();
+
         // Start shooting animation for the player who has the ball
         if (shoot1) player.startShooting();
         if (shoot2) player2.startShooting();
@@ -318,7 +321,7 @@ public class FirstScreen implements Screen {
             return;
         }
 
-        float barX = isPlayer1 ? player.getPlayerX() + 40f : player2.getPlayerX() + 40f;
+        float barX = isPlayer1 ? player.getPlayerX()  : player2.getPlayerX() + 230f ;
         float barY = BAR_MARGIN+200f;
         float fillHeight = BAR_HEIGHT * chargeAmt;
 
@@ -549,6 +552,7 @@ public class FirstScreen implements Screen {
         wasHolding = isHolding;
 
         if (isTrajectoryActive) {
+            possessionSwapCooldown = 10f;
             trajectoryTime += delta;
             float t = MathUtils.clamp(trajectoryTime / TRAJECTORY_DURATION, 0f, 1f);
             float targetHoopX = camera.viewportWidth - 500f + 150f;
@@ -572,6 +576,7 @@ public class FirstScreen implements Screen {
             System.out.println("Ball x: " + ballX);
                 pendingPossession = 2;
                 isTrajectoryActive = false;
+                possessionSwapCooldown = 0f;
                 trajectoryTime = 0f;
                 return;
             }
@@ -591,6 +596,7 @@ public class FirstScreen implements Screen {
                     madeShotFallX = camera.viewportWidth - 500f + 300f;
                     madeShotFallY = camera.viewportHeight / 2f - 300f + 250f;
                 } else {
+                    possessionSwapCooldown = 0f;
                     restartAfterMissedShot();
                 }
             }
@@ -601,6 +607,7 @@ public class FirstScreen implements Screen {
                 madeShotFalling = false;
                 madeShotFallTime = 0f;
                     // After shot falls (score), restart with swapped possession
+                    possessionSwapCooldown = 0f;
                     restartAfterMissedShot();
             
             }
@@ -704,6 +711,7 @@ public class FirstScreen implements Screen {
         wasHolding2 = isHolding;
 
         if (isTrajectoryActive2) {
+            possessionSwapCooldown = 10f;
             trajectoryTime2 += delta;
             float t = MathUtils.clamp(trajectoryTime2 / TRAJECTORY_DURATION, 0f, 1f);
             float targetHoopX = 300f;
@@ -724,6 +732,7 @@ public class FirstScreen implements Screen {
             if (didDefenderCatchBall(player, ballX, ballY)) {
                 System.out.println("player x: " + player.getPlayerX());
             System.out.println("Ball x: " + ballX);
+                possessionSwapCooldown = 0f;
                 // Defender caught the ball mid-air — defer switching until they land
                 pendingPossession = 1;
                 isTrajectoryActive2 = false;
@@ -747,6 +756,7 @@ public class FirstScreen implements Screen {
                     madeShotFallY2 = camera.viewportHeight / 2f - 300f + 250f;
                 } else {
                     restartAfterMissedShot();
+                    possessionSwapCooldown = 0f;
                 }
             }
         }
@@ -758,6 +768,7 @@ public class FirstScreen implements Screen {
                 madeShotFallTime2 = 0f;
                 // After shot falls (score), restart with swapped possession
                 restartAfterMissedShot();
+                possessionSwapCooldown = 0f;
             }
         }
     }
@@ -788,7 +799,7 @@ public class FirstScreen implements Screen {
     }
 
     private void handlePlayerContactPossessionSwap() {
-        float contactPadding = 14f;
+        float contactPadding = 5f;
         boolean playersTouching = player.getPlayerX() + player.getWidth() - contactPadding >= player2.getPlayerX()
             && player.getPlayerX() <= player2.getPlayerX() + player2.getWidth() - contactPadding
             && player.getPlayerY() + player.getHeight() - contactPadding >= player2.getPlayerY()
