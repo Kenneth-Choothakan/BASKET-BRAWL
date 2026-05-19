@@ -459,6 +459,8 @@ public class FirstScreen implements Screen {
             return;
         }
 
+        boolean shootingBlocked = isTrajectoryActive || isTrajectoryActive2 || madeShotFalling || madeShotFalling2;
+
         boolean isHolding = Gdx.input.isKeyPressed(Input.Keys.W);
         boolean cancelPressed = Gdx.input.isKeyJustPressed(Input.Keys.S);
 
@@ -486,14 +488,18 @@ public class FirstScreen implements Screen {
             }
         }
 
-        if (isHolding && canShoot == true) {
+        if (shootingBlocked) {
+            wasHolding = false;
+        }
+
+        if (!shootingBlocked && isHolding && canShoot == true) {
             if (chargeAmount == 1f) {
                 chargeAmount = 0f;
             }
             chargeAmount = MathUtils.clamp(chargeAmount + delta * CHARGE_RATE, 0f, 1f);
             timeSinceRelease = 0f;
             transparency = 1f;
-        } else if (wasHolding && canShoot == true) {
+        } else if (!shootingBlocked && wasHolding && canShoot == true) {
             canShoot = false;
             timeSinceRelease = 0f;
             transparency = 1f;
@@ -619,6 +625,8 @@ public class FirstScreen implements Screen {
             return;
         }
 
+        boolean shootingBlocked = isTrajectoryActive || isTrajectoryActive2 || madeShotFalling || madeShotFalling2;
+
         boolean isHolding = Gdx.input.isKeyPressed(Input.Keys.UP);
         boolean cancelPressed = Gdx.input.isKeyJustPressed(Input.Keys.DOWN);
 
@@ -644,14 +652,18 @@ public class FirstScreen implements Screen {
             }
         }
 
-        if (isHolding && canShoot2 == true) {
+        if (shootingBlocked) {
+            wasHolding2 = false;
+        }
+
+        if (!shootingBlocked && isHolding && canShoot2 == true) {
             if (chargeAmount2 == 1f) {
                 chargeAmount2 = 0f;
             }
             chargeAmount2 = MathUtils.clamp(chargeAmount2 + delta * CHARGE_RATE, 0f, 1f);
             timeSinceRelease2 = 0f;
             transparency2 = 1f;
-        } else if (wasHolding2 && canShoot2 == true) {
+        } else if (!shootingBlocked && wasHolding2 && canShoot2 == true) {
             canShoot2 = false;
             timeSinceRelease2 = 0f;
             transparency2 = 1f;
