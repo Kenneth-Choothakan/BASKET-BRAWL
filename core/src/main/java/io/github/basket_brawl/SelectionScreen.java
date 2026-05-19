@@ -94,10 +94,18 @@ public class SelectionScreen implements Screen {
 
     Sound sound;
 
+    String [] selectionList = {"Stepth Curry", "Kevin Durant", "Lebron James", "Jimmy Butler", "Mavir", "Brandon", "Vishal", "Jayson Tatum"};
+    String selected;
+    String player1Selected;
+    String player2Selected;
+
 
     
     public SelectionScreen(Main game) {
         this.game = game;
+        selected = selectionList[0];
+        //player1Selected = selectionList[0];
+        //player2Selected = selectionList[0];
         sound = Gdx.audio.newSound(Gdx.files.internal("Music/button.wav"));
         backgroundTexture = new Texture(Gdx.files.internal("SelectionBackground.png"));
         spriteBatch = new SpriteBatch();
@@ -157,6 +165,7 @@ public class SelectionScreen implements Screen {
         Butlerbool = false;
         Lebronbool = false;
         sound.play(1.5f);
+        selected = selectionList[1];
             }
         });
 
@@ -178,6 +187,7 @@ public class SelectionScreen implements Screen {
         Butlerbool = false;
         Lebronbool = false;
         sound.play(1.5f);
+        selected = selectionList[0];
             }
         });
 
@@ -198,7 +208,8 @@ public class SelectionScreen implements Screen {
         Durantbool = false;
         Butlerbool = false;
         Lebronbool = true; 
-        sound.play(1.5f);       
+        sound.play(1.5f);    
+        selected = selectionList[2];   
     }
         });
 
@@ -220,6 +231,7 @@ public class SelectionScreen implements Screen {
         Butlerbool = false;
         Lebronbool = false;
         sound.play(1.5f);
+        selected = selectionList[7];
             }
         });
         //--------------
@@ -240,7 +252,8 @@ public class SelectionScreen implements Screen {
         Durantbool = false;
         Butlerbool = true;
         Lebronbool = false;
-        sound.play(1.5f);        
+        sound.play(1.5f);   
+        selected = selectionList[3];     
         }
         });
 
@@ -261,7 +274,10 @@ public class SelectionScreen implements Screen {
         Durantbool = false;
         Butlerbool = false;
         Lebronbool = false;
-    sound.play(1.5f);        }
+    sound.play(1.5f);        
+        selected = selectionList[4];
+
+}
         });
 
         VishalTexture = new Texture(Gdx.files.internal("Vishal1.png"));
@@ -281,7 +297,10 @@ public class SelectionScreen implements Screen {
         Durantbool = false;
         Butlerbool = false;
         Lebronbool = false;
-    sound.play(1.5f);        }
+    sound.play(1.5f);        
+        selected = selectionList[6];
+
+}
         });
 
         BrandonTexture = new Texture(Gdx.files.internal("Brandon1.png"));
@@ -301,7 +320,10 @@ public class SelectionScreen implements Screen {
         Durantbool = false;
         Butlerbool = false;
         Lebronbool = false;
-    sound.play(1.5f);        }
+    sound.play(1.5f);        
+        selected = selectionList[5];
+
+}
         });
 
 
@@ -316,6 +338,8 @@ public class SelectionScreen implements Screen {
         @Override
         public void clicked(InputEvent event, float x, float y) {
         sound.play(1.5f);
+        player1Selected = selected;
+        System.out.println("Player 1: " + player1Selected);
         }
         });
 
@@ -331,6 +355,8 @@ public class SelectionScreen implements Screen {
         @Override
         public void clicked(InputEvent event, float x, float y) {
         sound.play(1.5f);
+        player2Selected = selected;
+        System.out.println("Player 2: " + player2Selected);
         }
         });
         Gdx.input.setInputProcessor(stage);

@@ -97,6 +97,8 @@ public class FirstScreen implements Screen {
     private boolean cancelShotPending2 = false;
     private Stage stage;
 
+    //private String 
+
     public FirstScreen() {
         // Create player 1 at left-center of screen
         player = new Player(100, 172);
