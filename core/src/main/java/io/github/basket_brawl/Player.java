@@ -44,6 +44,8 @@ public class Player {
     private static final float BLOCK_JUMP_DURATION = 1.05f;
     private static final float BLOCK_JUMP_HEIGHT = 400f;
     private static final float BLOCK_JUMP_DISTANCE = 680f;
+    private float minX = Float.NEGATIVE_INFINITY;
+    private float maxX = Float.POSITIVE_INFINITY;
     private float shootingAnimationTime = 0;
     private float shootingHoldTime = 0;
     private static final float SHOOT_HOLD_DURATION = 0.15f; // Briefly freeze on the last shot frame before returning to dribble
@@ -127,6 +129,8 @@ public class Player {
                 blockJumpTargetX = blockJumpQueuedTargetX;
             }
 
+            clampToHorizontalBounds();
+
             bounds.set(x, y, width, height);
             return;
         }
@@ -137,6 +141,8 @@ public class Player {
             float easedProgress = progress * progress * (3f - 2f * progress);
             x = blockJumpStartX + (blockJumpTargetX - blockJumpStartX) * easedProgress;
             y = blockJumpStartY + (float) Math.sin(progress * Math.PI) * BLOCK_JUMP_HEIGHT;
+
+            clampToHorizontalBounds();
 
             if (progress >= 1f) {
                 blockJumpActive = false;
@@ -159,6 +165,8 @@ public class Player {
         // Apply movement
         x += moveX;
         y = baseY;
+
+        clampToHorizontalBounds();
         
         isMoving = left || right;
 
@@ -303,7 +311,19 @@ public class Player {
         this.x = x;
         this.y = y;
         this.baseY = y;
+        clampToHorizontalBounds();
         bounds.set(x, y, width, height);
+    }
+
+    public void setHorizontalBounds(float minX, float maxX) {
+        this.minX = minX;
+        this.maxX = maxX;
+        clampToHorizontalBounds();
+        bounds.set(x, y, width, height);
+    }
+
+    private void clampToHorizontalBounds() {
+        x = Math.max(minX, Math.min(x, maxX));
     }
 
     public void startBlockJumpToward(float targetX) {
@@ -311,9 +331,10 @@ public class Player {
             return;
         }
 
-        float deltaX = targetX - x;
+        float clampedTargetX = Math.max(minX, Math.min(targetX, maxX));
+        float deltaX = clampedTargetX - x;
         float jumpDirection = deltaX < 0f ? -1f : 1f;
-        blockJumpTargetX = x + jumpDirection * BLOCK_JUMP_DISTANCE;
+        blockJumpTargetX = Math.max(minX, Math.min(x + jumpDirection * BLOCK_JUMP_DISTANCE, maxX));
         blockJumpQueuedTargetX = blockJumpTargetX;
         blockJumpStartX = x;
         blockJumpStartY = baseY;

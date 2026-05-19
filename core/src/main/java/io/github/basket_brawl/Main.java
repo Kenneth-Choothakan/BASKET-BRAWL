@@ -146,6 +146,6 @@ public class Main extends Game {
     }
 
     public void play(){
-        setScreen(new FirstScreen());
+        setScreen(new FirstScreen(this));
     }
 }

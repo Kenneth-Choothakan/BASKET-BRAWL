@@ -10,10 +10,16 @@ import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 
 /** First screen of the application. Displayed after the application is created. */
 public class FirstScreen implements Screen {
@@ -87,7 +93,7 @@ public class FirstScreen implements Screen {
     private float madeShotFallTime2 = 0f;
     private float madeShotFallX2;
     private float madeShotFallY2;
-    private static final float CATCH_HORIZONTAL_PADDING = 18f;
+    private static final float CATCH_HORIZONTAL_PADDING = 9f;
     private static final float CATCH_VERTICAL_PADDING = 24f;
     private int pendingPossession = 0; // 0 = none, 1 = to player1, 2 = to player2
     private static final float POSSESSION_SWAP_COOLDOWN = 0.5f;
@@ -96,8 +102,15 @@ public class FirstScreen implements Screen {
     private boolean cancelShotPending1 = false;
     private boolean cancelShotPending2 = false;
     private Stage stage;
+    private Main game;
+    private ImageButton homeButton;
+    private Texture homeTexture;
+    private Texture homeHoverTexture;
+    private static final float HOME_BUTTON_SIZE = 64f;
+    private static final float HOME_BUTTON_MARGIN = 10f;
 
-    public FirstScreen() {
+    public FirstScreen(Main game) {
+        this.game = game;
         // Create player 1 at left-center of screen
         player = new Player(100, 172);
         // Create player 2 at right-center of screen
@@ -129,6 +142,27 @@ public class FirstScreen implements Screen {
         hoopTexture = new Texture("Court/BasketBallHoop.png");
         hoopTextureLeft = new Texture("Court/BasketBallHoop.png");
         backgroundCourtTexture = new Texture("Court/BackgroundCourt.png");
+        
+        // Create home button
+        homeTexture = new Texture("homebutton.png");
+        homeHoverTexture = new Texture("homebutton.png");
+        ImageButton.ImageButtonStyle homeStyle = new ImageButton.ImageButtonStyle();
+        homeStyle.imageUp = new TextureRegionDrawable(new TextureRegion(homeTexture));
+        homeStyle.imageOver = new TextureRegionDrawable(new TextureRegion(homeHoverTexture));
+        homeButton = new ImageButton(homeStyle);
+        homeButton.setSize(HOME_BUTTON_SIZE, HOME_BUTTON_SIZE);
+        Table homeTable = new Table();
+        homeTable.setFillParent(true);
+        homeTable.top().left().pad(HOME_BUTTON_MARGIN);
+        homeTable.add(homeButton).size(HOME_BUTTON_SIZE, HOME_BUTTON_SIZE);
+        stage.addActor(homeTable);
+        
+        homeButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                game.setScreen(new StartScreen(game));
+            }
+        });
     }
 
     @Override
@@ -225,6 +259,10 @@ public class FirstScreen implements Screen {
         player.render(batch, false);
         player2.render(batch, true);
         batch.end();
+        
+        // Update and draw the UI stage (for home button)
+        stage.act(delta);
+        stage.draw();
     }
 
     @Override
@@ -242,6 +280,10 @@ public class FirstScreen implements Screen {
         // Update camera to match viewport
         camera.setToOrtho(false, width, height);
         camera.update();
+
+        player.setHorizontalBounds(0f, width - player.getWidth());
+        player2.setHorizontalBounds(0f, width - player2.getWidth());
+        stage.getViewport().update(width, height, true);
     }
 
     @Override

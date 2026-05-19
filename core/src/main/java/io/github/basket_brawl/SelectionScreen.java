@@ -125,10 +125,10 @@ public class SelectionScreen implements Screen {
         Lebronbool = false;
 
         //----
-        homeTexture = new Texture(Gdx.files.internal("homeButton.png"));
+        homeTexture = new Texture(Gdx.files.internal("homebutton.png"));
         homeDrawable = new TextureRegionDrawable(new TextureRegion(homeTexture));
         home = new ImageButton(homeDrawable); 
-        home.setSize(64, 64);
+        home.setSize(80, 80);
         stage.addActor(home);
         home.addListener(new ClickListener() {
         @Override
@@ -555,8 +555,8 @@ public class SelectionScreen implements Screen {
         }   
         
         //----
+        home.setPosition(10, viewport.getWorldHeight() - 90f);
         home.draw(spriteBatch, 1);
-        home.setPosition(0, 440);
 
         Player1.draw(spriteBatch, 1);
         Player1.setPosition(300, -50);
