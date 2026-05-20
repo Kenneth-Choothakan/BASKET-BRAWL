@@ -36,6 +36,10 @@ public class FirstScreen implements Screen {
     //                                                           Green           Yellow           Yellow 
     private static final float[][] shootingMargin2Pointer = {{0.45f,0.625f}, {0.35f, 0.45f}, {0.625f, 0.75f}};
     private static final float[][] shootingMargin3Pointer = {{0.675f,0.749f}, {0.575f, 0.675f}, {0.749f, 0.852f}};
+    private float[][] adjustedShootingMargin2Pointer;
+    private float[][] adjustedShootingMargin3Pointer;
+    private float[][] adjustedShootingMargin2Pointer2;
+    private float[][] adjustedShootingMargin3Pointer2;
     private final OrthographicCamera camera = new OrthographicCamera();
     private SpriteBatch spriteBatch;
     private BitmapFont scoreFont;
@@ -108,13 +112,25 @@ public class FirstScreen implements Screen {
     private Texture homeHoverTexture;
     private static final float HOME_BUTTON_SIZE = 64f;
     private static final float HOME_BUTTON_MARGIN = 10f;
+    private CharacterStats player1Stats;
+    private CharacterStats player2Stats;
 
     public FirstScreen(Main game) {
+        this(game, game.getPlayer1Selected(), game.getPlayer2Selected(), game.getPlayer1Stats(), game.getPlayer2Stats());
+    }
+
+    public FirstScreen(Main game, String player1Selected, String player2Selected) {
+        this(game, player1Selected, player2Selected, CharacterStats.getStatsForCharacter(player1Selected), CharacterStats.getStatsForCharacter(player2Selected));
+    }
+
+    public FirstScreen(Main game, String player1Selected, String player2Selected, CharacterStats player1Stats, CharacterStats player2Stats) {
         this.game = game;
+        this.player1Stats = player1Stats;
+        this.player2Stats = player2Stats;
         // Create player 1 at left-center of screen
-        player = new Player(100, 172);
+        player = new Player(100, 172, false, resolveCharacterSkin(player1Selected), player1Stats);
         // Create player 2 at right-center of screen
-        player2 = new Player(444, 172, true);
+        player2 = new Player(444, 172, true, resolveCharacterSkin(player2Selected), player2Stats);
         batch = new SpriteBatch();
         shapeRenderer = new ShapeRenderer();
         syncPlayerModes();
@@ -163,6 +179,12 @@ public class FirstScreen implements Screen {
                 game.setScreen(new StartScreen(game));
             }
         });
+
+        // Initialize adjusted shooting margins based on player stats
+        adjustedShootingMargin2Pointer = adjustShootingMargins(shootingMargin2Pointer, player1Stats.midRangeAccuracy);
+        adjustedShootingMargin3Pointer = adjustShootingMargins(shootingMargin3Pointer, player1Stats.threePointAccuracy);
+        adjustedShootingMargin2Pointer2 = adjustShootingMargins(shootingMargin2Pointer, player2Stats.midRangeAccuracy);
+        adjustedShootingMargin3Pointer2 = adjustShootingMargins(shootingMargin3Pointer, player2Stats.threePointAccuracy);
     }
 
     @Override
@@ -286,6 +308,29 @@ public class FirstScreen implements Screen {
         stage.getViewport().update(width, height, true);
     }
 
+    private String resolveCharacterSkin(String selectedCharacter) {
+        if (selectedCharacter == null) {
+            return "Steph";
+        }
+
+        switch (selectedCharacter) {
+            case "Lebron James":
+                return "LeBron";
+            case "Mavir":
+                return "Manvir";
+            case "Brandon":
+                return "Brandon";
+            case "Vishal":
+                return "Vishal";
+            case "Stepth Curry":
+            case "Kevin Durant":
+            case "Jimmy Butler":
+            case "Jayson Tatum":
+            default:
+                return "Steph";
+        }
+    }
+
     @Override
     public void pause() {
         // Invoked when your application is paused.
@@ -341,6 +386,29 @@ public class FirstScreen implements Screen {
         scoreFont.draw(batch, scoreText, scoreX, scoreY);
         batch.end();
     }
+
+    private float[][] adjustShootingMargins(float[][] baseMargins, float accuracyStat) {
+        // accuracyStat ranges from ~0.7 to ~0.85
+        // We'll expand the green zone based on accuracy
+        // Higher accuracy = wider green zone
+        float[][] adjusted = new float[3][2];
+        
+        // Green zone adjustment: expand by accuracy deviation from 0.75 (middle)
+        float greenExpansion = (accuracyStat - 0.75f) * 0.2f; // This gives roughly ±0.02 expansion for ±0.1 accuracy
+        
+        // Copy and adjust green zone (row 0)
+        adjusted[0][0] = Math.max(0f, baseMargins[0][0] - greenExpansion);
+        adjusted[0][1] = Math.min(1f, baseMargins[0][1] + greenExpansion);
+        
+        // Yellow zones (rows 1 and 2) - adjust to maintain balance
+        adjusted[1][0] = Math.max(0f, baseMargins[1][0] - greenExpansion * 0.5f);
+        adjusted[1][1] = baseMargins[1][1];
+        adjusted[2][0] = baseMargins[2][0];
+        adjusted[2][1] = Math.min(1f, baseMargins[2][1] + greenExpansion * 0.5f);
+        
+        return adjusted;
+    }
+
     public String getShotResult(float[][] shootingMargins, float chargeAmount) {
         if (chargeAmount >= shootingMargins[0][0] && chargeAmount <= shootingMargins[0][1]) {
             return "Green";
@@ -550,9 +618,9 @@ public class FirstScreen implements Screen {
             
             // Determine shooting margins for player 1
             if (player.getPlayerX() < 900f) {
-                shootingMargins = shootingMargin3Pointer;
+                shootingMargins = adjustedShootingMargin3Pointer;
             } else {
-                shootingMargins = shootingMargin2Pointer;
+                shootingMargins = adjustedShootingMargin2Pointer;
             }
             
             String shotResult = getShotResult(shootingMargins, chargeAmount);
@@ -714,9 +782,9 @@ public class FirstScreen implements Screen {
             
             // Determine shooting margins for player 2
             if (player2.getPlayerX() > 900f) {
-                shootingMargins2 = shootingMargin3Pointer;
+                shootingMargins2 = adjustedShootingMargin3Pointer2;
             } else {
-                shootingMargins2 = shootingMargin2Pointer;
+                shootingMargins2 = adjustedShootingMargin2Pointer2;
             }
             
             String shotResult = getShotResult(shootingMargins2, chargeAmount2);

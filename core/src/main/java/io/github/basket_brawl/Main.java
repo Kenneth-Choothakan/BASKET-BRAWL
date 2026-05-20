@@ -57,6 +57,10 @@ public class Main extends Game {
     Music song45;
     boolean musicStarted;
     Music[] songArray;
+    private String player1Selected = "Stepth Curry";
+    private String player2Selected = "Stepth Curry";
+    private CharacterStats player1Stats = CharacterStats.getStatsForCharacter("Stepth Curry");
+    private CharacterStats player2Stats = CharacterStats.getStatsForCharacter("Stepth Curry");
 
     @Override
     public void create() {
@@ -146,6 +150,32 @@ public class Main extends Game {
     }
 
     public void play(){
-        setScreen(new FirstScreen(this));
+        setScreen(new FirstScreen(this, player1Selected, player2Selected));
+    }
+
+    public String getPlayer1Selected() {
+        return player1Selected;
+    }
+
+    public void setPlayer1Selected(String player1Selected) {
+        this.player1Selected = player1Selected;
+        this.player1Stats = CharacterStats.getStatsForCharacter(player1Selected);
+    }
+
+    public String getPlayer2Selected() {
+        return player2Selected;
+    }
+
+    public void setPlayer2Selected(String player2Selected) {
+        this.player2Selected = player2Selected;
+        this.player2Stats = CharacterStats.getStatsForCharacter(player2Selected);
+    }
+
+    public CharacterStats getPlayer1Stats() {
+        return player1Stats;
+    }
+
+    public CharacterStats getPlayer2Stats() {
+        return player2Stats;
     }
 }
