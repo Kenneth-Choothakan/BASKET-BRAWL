@@ -55,6 +55,10 @@ public class Main extends Game {
     Music song43;
     Music song44;
     Music song45;
+    Music song46;
+    Music song47;
+    Music song48;
+
     boolean musicStarted;
     Music[] songArray;
 
@@ -108,8 +112,11 @@ public class Main extends Game {
         song43 = Gdx.audio.newMusic(Gdx.files.internal("Music/HIS.mp3"));
         song44 = Gdx.audio.newMusic(Gdx.files.internal("Music/You.mp3"));
         song45 = Gdx.audio.newMusic(Gdx.files.internal("Music/Kryptonite.mp3"));
+        song46 = Gdx.audio.newMusic(Gdx.files.internal("Music/SPACE.mp3"));
+        song47 = Gdx.audio.newMusic(Gdx.files.internal("Music/FAMILY.mp3"));
+        song48 = Gdx.audio.newMusic(Gdx.files.internal("Music/GLOCK.mp3"));  
 
-        songArray = new Music[] {song1, song2, song3, song4, song5, song6, song7, song8, song9, song10, song11, song12, song14, song15, song16, song17, song18, song19, song20, song21, song22, song23, song24, song25, song26, song27, song28, song29, song30, song31, song32, song33, song34, song35, song36, song37, song38, song39, song40, song41, song42, song43, song44, song45};
+        songArray = new Music[] {song1, song2, song3, song4, song5, song6, song7, song8, song9, song10, song11, song12, song14, song15, song16, song17, song18, song19, song20, song21, song22, song23, song24, song25, song26, song27, song28, song29, song30, song31, song32, song33, song34, song35, song36, song37, song38, song39, song40, song41, song42, song43, song44, song45, song46, song47, song48};
         //songSelection = (int)(Math.random() * songArray.length);
         songSelection = (int)(Math.random() * songArray.length);
         music = songArray[songSelection];
