@@ -14,11 +14,14 @@ public class Player {
     private float baseY;
     private final float width = 256;
     private final float height = 256;
-    private final float speed = 400f; // pixels per second
+    private float speed = 400f; // pixels per second (can be modified by stats)
     private boolean defenseMode;
+    private final String characterSkin;
+    private CharacterStats stats;
     
     private Rectangle bounds;
     private Sprite playerSprite;
+    private float skinScale = 1f;
     private TextureRegion idleFrame;
     private TextureRegion[] offenseDribbleFrames;
     private TextureRegion[] defenseDribbleFrames;
@@ -44,20 +47,53 @@ public class Player {
     private static final float BLOCK_JUMP_DURATION = 1.05f;
     private static final float BLOCK_JUMP_HEIGHT = 400f;
     private static final float BLOCK_JUMP_DISTANCE = 680f;
+    private float adjustedBlockJumpHeight = BLOCK_JUMP_HEIGHT;
+    private float adjustedBlockJumpDistance = BLOCK_JUMP_DISTANCE;
+    private float minX = Float.NEGATIVE_INFINITY;
+    private float maxX = Float.POSITIVE_INFINITY;
     private float shootingAnimationTime = 0;
     private float shootingHoldTime = 0;
     private static final float SHOOT_HOLD_DURATION = 0.15f; // Briefly freeze on the last shot frame before returning to dribble
     private static final float SHOOT_TRANSITION_SMOOTHING = 0.95f; // Slight easing for shooting time progression
     
     public Player(float startX, float startY) {
-        this(startX, startY, false);
+        this(startX, startY, false, "Steph", null);
     }
 
     public Player(float startX, float startY, boolean defenseMode) {
+        this(startX, startY, defenseMode, "Steph", null);
+    }
+
+    public Player(float startX, float startY, boolean defenseMode, String characterSkin) {
+        this(startX, startY, defenseMode, characterSkin, null);
+    }
+
+    public Player(float startX, float startY, boolean defenseMode, String characterSkin, CharacterStats stats) {
         this.x = startX;
         this.y = startY;
         this.baseY = startY;
         this.defenseMode = defenseMode;
+        this.characterSkin = normalizeSkin(characterSkin);
+        this.stats = stats;
+        
+        // Apply speed multiplier from stats
+        if (this.stats != null) {
+            this.speed = 400f * this.stats.speed;
+            this.adjustedBlockJumpHeight = BLOCK_JUMP_HEIGHT * this.stats.jumpHeight;
+        } else {
+            this.speed = 400f;
+            this.adjustedBlockJumpHeight = BLOCK_JUMP_HEIGHT;
+        }
+
+        if ("Manvir".equals(this.characterSkin)) {
+            this.speed *= 2f;
+            this.adjustedBlockJumpHeight *= 2f;
+        } else if ("Brandon".equals(this.characterSkin)) {
+            this.speed *= 0.25f;
+            this.adjustedBlockJumpHeight *= 0.25f;
+            this.adjustedBlockJumpDistance *= 0.5f;
+        }
+        
         this.bounds = new Rectangle(x, y, width, height);
 
         // Load dribbling animation frames
@@ -71,45 +107,180 @@ public class Player {
     }
     private void loadAnimations() {
         try {
-            // Load all walk frames from the appropriate folder
-            offenseDribbleFrames = new TextureRegion[3];
-            offenseDribbleFrames[0] = new TextureRegion(new Texture("Steph/Dribble/drib 1.png"));
-            offenseDribbleFrames[1] = new TextureRegion(new Texture("Steph/Dribble/drib 2.png"));
-            offenseDribbleFrames[2] = new TextureRegion(new Texture("Steph/Dribble/drib 3.png"));
+            String skinRoot = characterSkin;
+            switch (skinRoot) {
+                case "LeBron":
+                    offenseDribbleFrames = loadFrames(
+                        "LeBron/Dribble/1.png",
+                        "LeBron/Dribble/2.png",
+                        "LeBron/Dribble/3.png"
+                    );
+                    defenseDribbleFrames = loadFrames(
+                        "LeBron/Defense/1.png",
+                        "LeBron/Defense/2.png",
+                        "LeBron/Defense/1.png"
+                    );
+                    idleFrame = new TextureRegion(new Texture("LeBron/Defense/1.png"));
+                    blockFrames = loadFrames(
+                        "LeBron/Block/2.png",
+                        "LeBron/Block/3.png",
+                        "LeBron/Block/2.png",
+                        "LeBron/Block/3.png",
+                        "LeBron/Block/2.png"
+                    );
+                    shootingAnimation = new Animation<>(SHOOT_FRAME_DURATION, loadFrames(
+                        "LeBron/Shoot/1.png",
+                        "LeBron/Shoot/2.png",
+                        "LeBron/Shoot/3.png"
+                    ));
+                    break;
+                case "Brandon":
+                    offenseDribbleFrames = loadFrames(
+                        "Brandon/Dribble/1.png",
+                        "Brandon/Dribble/2.png",
+                        "Brandon/Dribble/3.png"
+                    );
+                    defenseDribbleFrames = loadFrames(
+                        "Brandon/Defense/1.png",
+                        "Brandon/Defense/2.png",
+                        "Brandon/Defense/1.png"
+                    );
+                    idleFrame = new TextureRegion(new Texture("Brandon/Defense/1.png"));
+                    blockFrames = loadFrames(
+                        "Brandon/Block/BranShoot2.png",
+                        "Brandon/Block/BranShoot3.png",
+                        "Brandon/Block/BranShoot2.png",
+                        "Brandon/Block/BranShoot3.png",
+                        "Brandon/Block/BranShoot2.png"
+                    );
+                    shootingAnimation = new Animation<>(SHOOT_FRAME_DURATION, loadFrames(
+                        "Brandon/Shoot/1.png",
+                        "Brandon/Shoot/2.png",
+                        "Brandon/Shoot/3.png"
+                    ));
+                    break;
+                case "Manvir":
+                    offenseDribbleFrames = loadFrames(
+                        "Manvir/Dribble/1.png",
+                        "Manvir/Dribble/2.png",
+                        "Manvir/Dribble/3.png"
+                    );
+                    defenseDribbleFrames = loadFrames(
+                        "Manvir/Defense/1.png",
+                        "Manvir/Defense/2.png",
+                        "Manvir/Defense/1.png"
+                    );
+                    idleFrame = new TextureRegion(new Texture("Manvir/Defense/1.png"));
+                    blockFrames = loadFrames(
+                        "Manvir/Block/2.png",
+                        "Manvir/Block/4.png",
+                        "Manvir/Block/2.png",
+                        "Manvir/Block/4.png",
+                        "Manvir/Block/2.png"
+                    );
+                    shootingAnimation = new Animation<>(SHOOT_FRAME_DURATION, loadFrames(
+                        "Manvir/Shoot/1.png",
+                        "Manvir/Shoot/2.png",
+                        "Manvir/Shoot/4.png"
+                    ));
+                    break;
+                case "Vishal":
+                    offenseDribbleFrames = loadFrames(
+                        "Vishal/Dribble/1.png",
+                        "Vishal/Dribble/2.png",
+                        "Vishal/Dribble/3.png"
+                    );
+                    defenseDribbleFrames = loadFrames(
+                        "Vishal/Defense/1.png",
+                        "Vishal/Defense/2.png",
+                        "Vishal/Defense/1.png"
+                    );
+                    idleFrame = new TextureRegion(new Texture("Vishal/Defense/1.png"));
+                    blockFrames = loadFrames(
+                        "Vishal/Block/1.png",
+                        "Vishal/Block/2.png",
+                        "Vishal/Block/1.png",
+                        "Vishal/Block/2.png",
+                        "Vishal/Block/1.png"
+                    );
+                    shootingAnimation = new Animation<>(SHOOT_FRAME_DURATION, loadFrames(
+                        "Vishal/Shoot/1.png",
+                        "Vishal/Shoot/2.png",
+                        "Vishal/Shoot/3.png"
+                    ));
+                    break;
+                case "Steph":
+                default:
+                    offenseDribbleFrames = loadFrames(
+                        "Steph/Dribble/drib 1.png",
+                        "Steph/Dribble/drib 2.png",
+                        "Steph/Dribble/drib 3.png"
+                    );
 
-            defenseDribbleFrames = new TextureRegion[3];
-            defenseDribbleFrames[0] = new TextureRegion(new Texture("Steph/Defense/shuffle 2.png"));
-            defenseDribbleFrames[1] = new TextureRegion(new Texture("Steph/Defense/shuffle 3.png"));
-            defenseDribbleFrames[2] = new TextureRegion(new Texture("Steph/Defense/shuffle 5.png"));
+                    defenseDribbleFrames = loadFrames(
+                        "Steph/Defense/shuffle 2.png",
+                        "Steph/Defense/shuffle 3.png",
+                        "Steph/Defense/shuffle 5.png"
+                    );
 
-            idleFrame = new TextureRegion(new Texture("Steph/Defense/idle.png"));
-            blockFrames = new TextureRegion[5];
-            blockFrames[0] = new TextureRegion(new Texture("Steph/Block/block 1.png"));
-            blockFrames[1] = new TextureRegion(new Texture("Steph/Block/block 2.png"));
-            blockFrames[2] = new TextureRegion(new Texture("Steph/Block/block 3.png"));
-            blockFrames[3] = new TextureRegion(new Texture("Steph/Block/block 4.png"));
-            blockFrames[4] = new TextureRegion(new Texture("Steph/Block/block 5.png"));
+                    idleFrame = new TextureRegion(new Texture("Steph/Defense/idle.png"));
+                    blockFrames = loadFrames(
+                        "Steph/Block/block 1.png",
+                        "Steph/Block/block 2.png",
+                        "Steph/Block/block 3.png",
+                        "Steph/Block/block 4.png",
+                        "Steph/Block/block 5.png"
+                    );
+                    shootingAnimation = new Animation<>(SHOOT_FRAME_DURATION, loadFrames(
+                        "Steph/Shoot/shoot 1.png",
+                        "Steph/Shoot/shoot 2.png",
+                        "Steph/Shoot/shoot 3.png"
+                    ));
+                    break;
+            }
             
             // Create dribble animation with 0.15 second per frame
             offenseDribbleAnimation = new Animation<>(FRAME_DURATION, offenseDribbleFrames);
             defenseDribbleAnimation = new Animation<>(FRAME_DURATION, defenseDribbleFrames);
-            
-            // Load all 3 shooting frames
-            TextureRegion[] shootingFrames = new TextureRegion[3];
-            shootingFrames[0] = new TextureRegion(new Texture("Steph/Shoot/shoot 1.png"));
-            shootingFrames[1] = new TextureRegion(new Texture("Steph/Shoot/shoot 2.png"));
-            shootingFrames[2] = new TextureRegion(new Texture("Steph/Shoot/shoot 3.png"));
-            
-            // Create shooting animation with a slower frame rate than dribble
-            shootingAnimation = new Animation<>(SHOOT_FRAME_DURATION, shootingFrames);
 
             playerSprite = defenseMode ? new Sprite(idleFrame) : new Sprite(offenseDribbleFrames[0]);
             playerSprite.setSize(256, 256);
-            
-            System.out.println("Animations loaded successfully!");
+            // Simplified scaling: make every skin except Steph larger by a fixed multiplier
+            if ("Steph".equals(characterSkin)) {
+                skinScale = 1f;
+            } else {
+                skinScale = 2f; // larger so non-Steph characters appear closer in size to Steph
+            }
+
+            System.out.println("Animations loaded successfully! (skinScale=" + skinScale + ")");
         } catch (Exception e) {
             System.out.println("Error loading animations: " + e.getMessage());
         }
+    }
+
+    private String normalizeSkin(String skinName) {
+        if (skinName == null) {
+            return "Steph";
+        }
+
+        switch (skinName) {
+            case "LeBron":
+            case "Brandon":
+            case "Manvir":
+            case "Vishal":
+                return skinName;
+            case "Steph":
+            default:
+                return "Steph";
+        }
+    }
+
+    private TextureRegion[] loadFrames(String... paths) {
+        TextureRegion[] frames = new TextureRegion[paths.length];
+        for (int index = 0; index < paths.length; index++) {
+            frames[index] = new TextureRegion(new Texture(paths[index]));
+        }
+        return frames;
     }
     
     public void update(float delta, boolean left, boolean right, boolean shootingHeld) {
@@ -127,6 +298,8 @@ public class Player {
                 blockJumpTargetX = blockJumpQueuedTargetX;
             }
 
+            clampToHorizontalBounds();
+
             bounds.set(x, y, width, height);
             return;
         }
@@ -136,7 +309,9 @@ public class Player {
             float progress = Math.min(blockJumpTime / BLOCK_JUMP_DURATION, 1f);
             float easedProgress = progress * progress * (3f - 2f * progress);
             x = blockJumpStartX + (blockJumpTargetX - blockJumpStartX) * easedProgress;
-            y = blockJumpStartY + (float) Math.sin(progress * Math.PI) * BLOCK_JUMP_HEIGHT;
+            y = blockJumpStartY + (float) Math.sin(progress * Math.PI) * adjustedBlockJumpHeight;
+
+            clampToHorizontalBounds();
 
             if (progress >= 1f) {
                 blockJumpActive = false;
@@ -159,6 +334,8 @@ public class Player {
         // Apply movement
         x += moveX;
         y = baseY;
+
+        clampToHorizontalBounds();
         
         isMoving = left || right;
 
@@ -235,17 +412,35 @@ public class Player {
             currentFrame.setV(0);
             currentFrame.setU2(1);
             currentFrame.setV2(1);
-                    float frameWidth = 256; // Fixed size for consistent scaling
-                    float frameHeight = 256;
-                    float scale = Math.min(width / frameWidth, height / frameHeight);
-                    float drawWidth = frameWidth * scale;
-                    float drawHeight = frameHeight * scale;
-                    if (faceRight) {
-                        currentFrame.flip(true, false);
-                    }
-                    float drawX = x + (width - drawWidth) / 2f;
-                    float drawY = y + (height - drawHeight) / 2f;
-                    batch.draw(currentFrame, drawX, drawY, drawWidth, drawHeight);
+            float frameWidth = currentFrame.getRegionWidth();
+            float frameHeight = currentFrame.getRegionHeight();
+            if (frameWidth <= 0 || frameHeight <= 0) {
+                frameWidth = 256f;
+                frameHeight = 256f;
+            }
+            float scale = Math.min(width / frameWidth, height / frameHeight);
+            // Apply special-case downscaling for Brandon during jump, dribble, and shoot
+            float extraAnimScale = 1f;
+            if ("Brandon".equals(characterSkin)) {
+                boolean isShootingAnim = (isShooting && shootingAnimation != null) || (shootingFinished && shootingAnimation != null);
+                boolean isJumpAnim = (defenseMode && (blockJumpWindupActive || blockJumpActive) && blockFrames != null);
+                boolean isDribbleAnim = (!defenseMode && offenseDribbleAnimation != null);
+                if (isShootingAnim || isJumpAnim || isDribbleAnim) {
+                    extraAnimScale = 0.5f; // reduce Brandon's animation size for these actions
+                }
+            }
+
+            float drawWidth = frameWidth * scale * skinScale * extraAnimScale;
+            float drawHeight = frameHeight * scale * skinScale * extraAnimScale;
+            float drawX = x + (width - drawWidth) / 2f;
+            float drawY = y + (height - drawHeight) / 2f;
+            // Use a Sprite so we can flip safely without mutating the shared TextureRegion
+            Sprite sprite = new Sprite(currentFrame);
+            sprite.setSize(drawWidth, drawHeight);
+            sprite.setPosition(drawX, drawY);
+            if (faceRight && !sprite.isFlipX()) sprite.flip(true, false);
+            if (!faceRight && sprite.isFlipX()) sprite.flip(true, false);
+            sprite.draw(batch);
         } else if (playerSprite != null) {
             playerSprite.setPosition(x, y);
             playerSprite.draw(batch);
@@ -303,7 +498,19 @@ public class Player {
         this.x = x;
         this.y = y;
         this.baseY = y;
+        clampToHorizontalBounds();
         bounds.set(x, y, width, height);
+    }
+
+    public void setHorizontalBounds(float minX, float maxX) {
+        this.minX = minX;
+        this.maxX = maxX;
+        clampToHorizontalBounds();
+        bounds.set(x, y, width, height);
+    }
+
+    private void clampToHorizontalBounds() {
+        x = Math.max(minX, Math.min(x, maxX));
     }
 
     public void startBlockJumpToward(float targetX) {
@@ -311,9 +518,10 @@ public class Player {
             return;
         }
 
-        float deltaX = targetX - x;
+        float clampedTargetX = Math.max(minX, Math.min(targetX, maxX));
+        float deltaX = clampedTargetX - x;
         float jumpDirection = deltaX < 0f ? -1f : 1f;
-        blockJumpTargetX = x + jumpDirection * BLOCK_JUMP_DISTANCE;
+        blockJumpTargetX = Math.max(minX, Math.min(x + jumpDirection * adjustedBlockJumpDistance, maxX));
         blockJumpQueuedTargetX = blockJumpTargetX;
         blockJumpStartX = x;
         blockJumpStartY = baseY;

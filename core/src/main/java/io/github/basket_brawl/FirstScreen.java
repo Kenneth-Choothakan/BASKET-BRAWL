@@ -10,10 +10,16 @@ import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 
 /** First screen of the application. Displayed after the application is created. */
 public class FirstScreen implements Screen {
@@ -30,6 +36,10 @@ public class FirstScreen implements Screen {
     //                                                           Green           Yellow           Yellow 
     private static final float[][] shootingMargin2Pointer = {{0.45f,0.625f}, {0.35f, 0.45f}, {0.625f, 0.75f}};
     private static final float[][] shootingMargin3Pointer = {{0.675f,0.749f}, {0.575f, 0.675f}, {0.749f, 0.852f}};
+    private float[][] adjustedShootingMargin2Pointer;
+    private float[][] adjustedShootingMargin3Pointer;
+    private float[][] adjustedShootingMargin2Pointer2;
+    private float[][] adjustedShootingMargin3Pointer2;
     private final OrthographicCamera camera = new OrthographicCamera();
     private SpriteBatch spriteBatch;
     private BitmapFont scoreFont;
@@ -87,7 +97,7 @@ public class FirstScreen implements Screen {
     private float madeShotFallTime2 = 0f;
     private float madeShotFallX2;
     private float madeShotFallY2;
-    private static final float CATCH_HORIZONTAL_PADDING = 18f;
+    private static final float CATCH_HORIZONTAL_PADDING = 9f;
     private static final float CATCH_VERTICAL_PADDING = 24f;
     private int pendingPossession = 0; // 0 = none, 1 = to player1, 2 = to player2
     private static final float POSSESSION_SWAP_COOLDOWN = 0.5f;
@@ -96,14 +106,31 @@ public class FirstScreen implements Screen {
     private boolean cancelShotPending1 = false;
     private boolean cancelShotPending2 = false;
     private Stage stage;
+    private Main game;
+    private ImageButton homeButton;
+    private Texture homeTexture;
+    private Texture homeHoverTexture;
+    private static final float HOME_BUTTON_SIZE = 64f;
+    private static final float HOME_BUTTON_MARGIN = 10f;
+    private CharacterStats player1Stats;
+    private CharacterStats player2Stats;
 
-    //private String 
+    public FirstScreen(Main game) {
+        this(game, game.getPlayer1Selected(), game.getPlayer2Selected(), game.getPlayer1Stats(), game.getPlayer2Stats());
+    }
 
-    public FirstScreen() {
+    public FirstScreen(Main game, String player1Selected, String player2Selected) {
+        this(game, player1Selected, player2Selected, CharacterStats.getStatsForCharacter(player1Selected), CharacterStats.getStatsForCharacter(player2Selected));
+    }
+
+    public FirstScreen(Main game, String player1Selected, String player2Selected, CharacterStats player1Stats, CharacterStats player2Stats) {
+        this.game = game;
+        this.player1Stats = player1Stats;
+        this.player2Stats = player2Stats;
         // Create player 1 at left-center of screen
-        player = new Player(100, 172);
+        player = new Player(100, 172, false, resolveCharacterSkin(player1Selected), player1Stats);
         // Create player 2 at right-center of screen
-        player2 = new Player(444, 172, true);
+        player2 = new Player(444, 172, true, resolveCharacterSkin(player2Selected), player2Stats);
         batch = new SpriteBatch();
         shapeRenderer = new ShapeRenderer();
         syncPlayerModes();
@@ -131,6 +158,33 @@ public class FirstScreen implements Screen {
         hoopTexture = new Texture("Court/BasketBallHoop.png");
         hoopTextureLeft = new Texture("Court/BasketBallHoop.png");
         backgroundCourtTexture = new Texture("Court/BackgroundCourt.png");
+        
+        // Create home button
+        homeTexture = new Texture("homebutton.png");
+        homeHoverTexture = new Texture("homebutton.png");
+        ImageButton.ImageButtonStyle homeStyle = new ImageButton.ImageButtonStyle();
+        homeStyle.imageUp = new TextureRegionDrawable(new TextureRegion(homeTexture));
+        homeStyle.imageOver = new TextureRegionDrawable(new TextureRegion(homeHoverTexture));
+        homeButton = new ImageButton(homeStyle);
+        homeButton.setSize(HOME_BUTTON_SIZE, HOME_BUTTON_SIZE);
+        Table homeTable = new Table();
+        homeTable.setFillParent(true);
+        homeTable.top().left().pad(HOME_BUTTON_MARGIN);
+        homeTable.add(homeButton).size(HOME_BUTTON_SIZE, HOME_BUTTON_SIZE);
+        stage.addActor(homeTable);
+        
+        homeButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                game.setScreen(new StartScreen(game));
+            }
+        });
+
+        // Initialize adjusted shooting margins based on player stats
+        adjustedShootingMargin2Pointer = adjustShootingMargins(shootingMargin2Pointer, player1Stats.midRangeAccuracy);
+        adjustedShootingMargin3Pointer = adjustShootingMargins(shootingMargin3Pointer, player1Stats.threePointAccuracy);
+        adjustedShootingMargin2Pointer2 = adjustShootingMargins(shootingMargin2Pointer, player2Stats.midRangeAccuracy);
+        adjustedShootingMargin3Pointer2 = adjustShootingMargins(shootingMargin3Pointer, player2Stats.threePointAccuracy);
     }
 
     @Override
@@ -227,6 +281,10 @@ public class FirstScreen implements Screen {
         player.render(batch, false);
         player2.render(batch, true);
         batch.end();
+        
+        // Update and draw the UI stage (for home button)
+        stage.act(delta);
+        stage.draw();
     }
 
     @Override
@@ -244,6 +302,33 @@ public class FirstScreen implements Screen {
         // Update camera to match viewport
         camera.setToOrtho(false, width, height);
         camera.update();
+
+        player.setHorizontalBounds(0f, width - player.getWidth());
+        player2.setHorizontalBounds(0f, width - player2.getWidth());
+        stage.getViewport().update(width, height, true);
+    }
+
+    private String resolveCharacterSkin(String selectedCharacter) {
+        if (selectedCharacter == null) {
+            return "Steph";
+        }
+
+        switch (selectedCharacter) {
+            case "Lebron James":
+                return "LeBron";
+            case "Mavir":
+                return "Manvir";
+            case "Brandon":
+                return "Brandon";
+            case "Vishal":
+                return "Vishal";
+            case "Stepth Curry":
+            case "Kevin Durant":
+            case "Jimmy Butler":
+            case "Jayson Tatum":
+            default:
+                return "Steph";
+        }
     }
 
     @Override
@@ -301,6 +386,45 @@ public class FirstScreen implements Screen {
         scoreFont.draw(batch, scoreText, scoreX, scoreY);
         batch.end();
     }
+
+    private float[][] adjustShootingMargins(float[][] baseMargins, float accuracyStat) {
+        // accuracyStat ranges from ~0.7 to ~0.85
+        // We'll expand the green zone based on accuracy
+        // Higher accuracy = wider green zone
+        float[][] adjusted = new float[3][2];
+
+        // Green zone adjustment: expand by accuracy deviation from 0.75 (middle)
+        float greenExpansion = (accuracyStat - 0.75f) * 0.2f; // This gives roughly ±0.02 expansion for ±0.1 accuracy
+
+        // Compute new green bounds and clamp
+        float g0 = Math.max(0f, baseMargins[0][0] - greenExpansion);
+        float g1 = Math.min(1f, baseMargins[0][1] + greenExpansion);
+        if (g0 > g1) {
+            float mid = (g0 + g1) / 2f;
+            g0 = mid;
+            g1 = mid;
+        }
+        adjusted[0][0] = g0;
+        adjusted[0][1] = g1;
+
+        // Make yellow zones contiguous with the green zone to avoid gaps/overlaps.
+        // Yellow lower (row 1) ends where green begins.
+        float y1Start = Math.max(0f, baseMargins[1][0] - greenExpansion * 0.5f);
+        float y1End = g0;
+        if (y1Start > y1End) y1Start = y1End;
+        adjusted[1][0] = y1Start;
+        adjusted[1][1] = y1End;
+
+        // Yellow upper (row 2) begins where green ends.
+        float y2Start = g1;
+        float y2End = Math.min(1f, baseMargins[2][1] + greenExpansion * 0.5f);
+        if (y2End < y2Start) y2End = y2Start;
+        adjusted[2][0] = y2Start;
+        adjusted[2][1] = y2End;
+
+        return adjusted;
+    }
+
     public String getShotResult(float[][] shootingMargins, float chargeAmount) {
         if (chargeAmount >= shootingMargins[0][0] && chargeAmount <= shootingMargins[0][1]) {
             return "Green";
@@ -343,25 +467,69 @@ public class FirstScreen implements Screen {
         shapeRenderer.rectLine(barX + BAR_WIDTH, barY, barX + BAR_WIDTH, barY + BAR_HEIGHT, transparency);
 
         Player playerRef = isPlayer1 ? player : player2;
-        
-        // 3 pointer
-        if (playerRef.getPlayerX() <= 900f && isPlayer1 || playerRef.getPlayerX() >= 900f && !isPlayer1 ) {
-            shapeRenderer.setColor(0.2f, 0.85f, 0.45f, transparency-0.5f);
-            shapeRenderer.rect(barX, barY + 150f, BAR_WIDTH, 15f);
-            shapeRenderer.setColor(1f, 1f, 0f, transparency-0.5f);
-            shapeRenderer.rect(barX, barY + 165f, BAR_WIDTH, 25f);
-            shapeRenderer.setColor(1f, 1f, 0f, transparency-0.5f);
-            shapeRenderer.rect(barX, barY + 125f, BAR_WIDTH, 25f);
+
+        // Determine which adjusted margins to use for this player and shot type
+        float[][] marginsToDraw;
+        if (isPlayer1) {
+            if (player.getPlayerX() < 900f) {
+                marginsToDraw = adjustedShootingMargin3Pointer;
+            } else {
+                marginsToDraw = adjustedShootingMargin2Pointer;
+            }
+        } else {
+            if (player2.getPlayerX() > 900f) {
+                marginsToDraw = adjustedShootingMargin3Pointer2;
+            } else {
+                marginsToDraw = adjustedShootingMargin2Pointer2;
+            }
         }
 
-        // 2 pointer
-        if (playerRef.getPlayerX() > 900f && isPlayer1 || playerRef.getPlayerX() < 900f && !isPlayer1) {
-            shapeRenderer.setColor(0.2f, 0.85f, 0.45f, transparency-0.5f);
-            shapeRenderer.rect(barX, barY + 100f, BAR_WIDTH, 40f);
-            shapeRenderer.setColor(1f, 1f, 0f, transparency-0.5f);
-            shapeRenderer.rect(barX, barY + 140f, BAR_WIDTH, 25f);
-            shapeRenderer.setColor(1f, 1f, 0f, transparency-0.5f);
-            shapeRenderer.rect(barX, barY + 75f, BAR_WIDTH, 25f);
+        // If margins are available, draw green and yellow zones according to fractions
+        if (marginsToDraw != null) {
+            // Green zone (row 0)
+            float g0 = marginsToDraw[0][0];
+            float g1 = marginsToDraw[0][1];
+            float greenY = barY + BAR_HEIGHT * g0;
+            float greenH = BAR_HEIGHT * Math.max(0f, g1 - g0);
+            shapeRenderer.setColor(0.2f, 0.85f, 0.45f, Math.max(0f, transparency - 0.5f));
+            shapeRenderer.rect(barX, greenY, BAR_WIDTH, greenH);
+
+            // Yellow zones (row 1 and row 2)
+            float y10 = marginsToDraw[1][0];
+            float y11 = marginsToDraw[1][1];
+            float y20 = marginsToDraw[2][0];
+            float y21 = marginsToDraw[2][1];
+            if (y11 > y10) {
+                float y1Y = barY + BAR_HEIGHT * y10;
+                float y1H = BAR_HEIGHT * (y11 - y10);
+                shapeRenderer.setColor(1f, 1f, 0f, Math.max(0f, transparency - 0.5f));
+                shapeRenderer.rect(barX, y1Y, BAR_WIDTH, y1H);
+            }
+            if (y21 > y20) {
+                float y2Y = barY + BAR_HEIGHT * y20;
+                float y2H = BAR_HEIGHT * (y21 - y20);
+                shapeRenderer.setColor(1f, 1f, 0f, Math.max(0f, transparency - 0.5f));
+                shapeRenderer.rect(barX, y2Y, BAR_WIDTH, y2H);
+            }
+        } else {
+            // Fallback to original visuals if margins not ready
+            if (playerRef.getPlayerX() <= 900f && isPlayer1 || playerRef.getPlayerX() >= 900f && !isPlayer1 ) {
+                shapeRenderer.setColor(0.2f, 0.85f, 0.45f, transparency-0.5f);
+                shapeRenderer.rect(barX, barY + 150f, BAR_WIDTH, 15f);
+                shapeRenderer.setColor(1f, 1f, 0f, transparency-0.5f);
+                shapeRenderer.rect(barX, barY + 165f, BAR_WIDTH, 25f);
+                shapeRenderer.setColor(1f, 1f, 0f, transparency-0.5f);
+                shapeRenderer.rect(barX, barY + 125f, BAR_WIDTH, 25f);
+            }
+
+            if (playerRef.getPlayerX() > 900f && isPlayer1 || playerRef.getPlayerX() < 900f && !isPlayer1) {
+                shapeRenderer.setColor(0.2f, 0.85f, 0.45f, transparency-0.5f);
+                shapeRenderer.rect(barX, barY + 100f, BAR_WIDTH, 40f);
+                shapeRenderer.setColor(1f, 1f, 0f, transparency-0.5f);
+                shapeRenderer.rect(barX, barY + 140f, BAR_WIDTH, 25f);
+                shapeRenderer.setColor(1f, 1f, 0f, transparency-0.5f);
+                shapeRenderer.rect(barX, barY + 75f, BAR_WIDTH, 25f);
+            }
         }
 
         shapeRenderer.end();
@@ -461,6 +629,8 @@ public class FirstScreen implements Screen {
             return;
         }
 
+        boolean shootingBlocked = isTrajectoryActive || isTrajectoryActive2 || madeShotFalling || madeShotFalling2;
+
         boolean isHolding = Gdx.input.isKeyPressed(Input.Keys.W);
         boolean cancelPressed = Gdx.input.isKeyJustPressed(Input.Keys.S);
 
@@ -488,14 +658,18 @@ public class FirstScreen implements Screen {
             }
         }
 
-        if (isHolding && canShoot == true) {
+        if (shootingBlocked) {
+            wasHolding = false;
+        }
+
+        if (!shootingBlocked && isHolding && canShoot == true) {
             if (chargeAmount == 1f) {
                 chargeAmount = 0f;
             }
             chargeAmount = MathUtils.clamp(chargeAmount + delta * CHARGE_RATE, 0f, 1f);
             timeSinceRelease = 0f;
             transparency = 1f;
-        } else if (wasHolding && canShoot == true) {
+        } else if (!shootingBlocked && wasHolding && canShoot == true) {
             canShoot = false;
             timeSinceRelease = 0f;
             transparency = 1f;
@@ -504,9 +678,9 @@ public class FirstScreen implements Screen {
             
             // Determine shooting margins for player 1
             if (player.getPlayerX() < 900f) {
-                shootingMargins = shootingMargin3Pointer;
+                shootingMargins = adjustedShootingMargin3Pointer;
             } else {
-                shootingMargins = shootingMargin2Pointer;
+                shootingMargins = adjustedShootingMargin2Pointer;
             }
             
             String shotResult = getShotResult(shootingMargins, chargeAmount);
@@ -588,7 +762,7 @@ public class FirstScreen implements Screen {
                 trajectoryTime = 0f;
                 if (shouldMakeShot) {
                     // Award points to player 1 based on whether this was a 3-pointer or 2-pointer
-                    if (shootingMargins == shootingMargin3Pointer) {
+                    if (shootingMargins == adjustedShootingMargin3Pointer) {
                         player1ThreePointScore += 3;
                     } else {
                         player1TwoPointScore += 2;
@@ -621,6 +795,8 @@ public class FirstScreen implements Screen {
             return;
         }
 
+        boolean shootingBlocked = isTrajectoryActive || isTrajectoryActive2 || madeShotFalling || madeShotFalling2;
+
         boolean isHolding = Gdx.input.isKeyPressed(Input.Keys.UP);
         boolean cancelPressed = Gdx.input.isKeyJustPressed(Input.Keys.DOWN);
 
@@ -646,14 +822,18 @@ public class FirstScreen implements Screen {
             }
         }
 
-        if (isHolding && canShoot2 == true) {
+        if (shootingBlocked) {
+            wasHolding2 = false;
+        }
+
+        if (!shootingBlocked && isHolding && canShoot2 == true) {
             if (chargeAmount2 == 1f) {
                 chargeAmount2 = 0f;
             }
             chargeAmount2 = MathUtils.clamp(chargeAmount2 + delta * CHARGE_RATE, 0f, 1f);
             timeSinceRelease2 = 0f;
             transparency2 = 1f;
-        } else if (wasHolding2 && canShoot2 == true) {
+        } else if (!shootingBlocked && wasHolding2 && canShoot2 == true) {
             canShoot2 = false;
             timeSinceRelease2 = 0f;
             transparency2 = 1f;
@@ -662,9 +842,9 @@ public class FirstScreen implements Screen {
             
             // Determine shooting margins for player 2
             if (player2.getPlayerX() > 900f) {
-                shootingMargins2 = shootingMargin3Pointer;
+                shootingMargins2 = adjustedShootingMargin3Pointer2;
             } else {
-                shootingMargins2 = shootingMargin2Pointer;
+                shootingMargins2 = adjustedShootingMargin2Pointer2;
             }
             
             String shotResult = getShotResult(shootingMargins2, chargeAmount2);
@@ -747,7 +927,7 @@ public class FirstScreen implements Screen {
                 trajectoryTime2 = 0f;
                 if (shouldMakeShot2) {
                     // Award points to player 2 based on whether this was a 3-pointer or 2-pointer
-                    if (shootingMargins2 == shootingMargin3Pointer) {
+                    if (shootingMargins2 == adjustedShootingMargin3Pointer2) {
                         player2ThreePointScore += 3;
                     } else {
                         player2TwoPointScore += 2;
