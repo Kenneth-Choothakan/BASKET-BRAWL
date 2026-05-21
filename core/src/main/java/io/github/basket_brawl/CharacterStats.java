@@ -21,11 +21,11 @@ public class CharacterStats {
 
         switch (characterName) {
             case "Stepth Curry":
-                return new CharacterStats(1.0f, 0.85f, 0.70f, 0.9f);
+                return new CharacterStats(1.0f, 1.2f, 0.70f, 0.9f);
             case "Kevin Durant":
                 return new CharacterStats(0.95f, 0.80f, 0.75f, 0.95f);
             case "Lebron James":
-                return new CharacterStats(0.90f, 0.70f, 0.85f, 1.1f);
+                return new CharacterStats(1.35f, 0.70f, 0.85f, 1.1f);
             case "Jimmy Butler":
                 return new CharacterStats(0.95f, 0.75f, 0.80f, 1.0f);
             case "Mavir":

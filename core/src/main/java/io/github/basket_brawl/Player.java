@@ -48,6 +48,7 @@ public class Player {
     private static final float BLOCK_JUMP_HEIGHT = 400f;
     private static final float BLOCK_JUMP_DISTANCE = 680f;
     private float adjustedBlockJumpHeight = BLOCK_JUMP_HEIGHT;
+    private float adjustedBlockJumpDistance = BLOCK_JUMP_DISTANCE;
     private float minX = Float.NEGATIVE_INFINITY;
     private float maxX = Float.POSITIVE_INFINITY;
     private float shootingAnimationTime = 0;
@@ -82,6 +83,15 @@ public class Player {
         } else {
             this.speed = 400f;
             this.adjustedBlockJumpHeight = BLOCK_JUMP_HEIGHT;
+        }
+
+        if ("Manvir".equals(this.characterSkin)) {
+            this.speed *= 2f;
+            this.adjustedBlockJumpHeight *= 2f;
+        } else if ("Brandon".equals(this.characterSkin)) {
+            this.speed *= 0.25f;
+            this.adjustedBlockJumpHeight *= 0.25f;
+            this.adjustedBlockJumpDistance *= 0.5f;
         }
         
         this.bounds = new Rectangle(x, y, width, height);
@@ -511,7 +521,7 @@ public class Player {
         float clampedTargetX = Math.max(minX, Math.min(targetX, maxX));
         float deltaX = clampedTargetX - x;
         float jumpDirection = deltaX < 0f ? -1f : 1f;
-        blockJumpTargetX = Math.max(minX, Math.min(x + jumpDirection * BLOCK_JUMP_DISTANCE, maxX));
+        blockJumpTargetX = Math.max(minX, Math.min(x + jumpDirection * adjustedBlockJumpDistance, maxX));
         blockJumpQueuedTargetX = blockJumpTargetX;
         blockJumpStartX = x;
         blockJumpStartY = baseY;

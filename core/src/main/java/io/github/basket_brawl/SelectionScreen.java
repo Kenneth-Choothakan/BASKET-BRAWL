@@ -620,9 +620,6 @@ public class SelectionScreen implements Screen {
         Brandon.draw(spriteBatch, 1);
         Brandon.setPosition(380, 60);
 
-        // Draw stats for selected character
-        drawCharacterStats();
-
         spriteBatch.end();
     }
 

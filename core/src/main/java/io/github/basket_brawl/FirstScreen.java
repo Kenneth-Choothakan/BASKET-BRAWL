@@ -392,20 +392,36 @@ public class FirstScreen implements Screen {
         // We'll expand the green zone based on accuracy
         // Higher accuracy = wider green zone
         float[][] adjusted = new float[3][2];
-        
+
         // Green zone adjustment: expand by accuracy deviation from 0.75 (middle)
         float greenExpansion = (accuracyStat - 0.75f) * 0.2f; // This gives roughly ±0.02 expansion for ±0.1 accuracy
-        
-        // Copy and adjust green zone (row 0)
-        adjusted[0][0] = Math.max(0f, baseMargins[0][0] - greenExpansion);
-        adjusted[0][1] = Math.min(1f, baseMargins[0][1] + greenExpansion);
-        
-        // Yellow zones (rows 1 and 2) - adjust to maintain balance
-        adjusted[1][0] = Math.max(0f, baseMargins[1][0] - greenExpansion * 0.5f);
-        adjusted[1][1] = baseMargins[1][1];
-        adjusted[2][0] = baseMargins[2][0];
-        adjusted[2][1] = Math.min(1f, baseMargins[2][1] + greenExpansion * 0.5f);
-        
+
+        // Compute new green bounds and clamp
+        float g0 = Math.max(0f, baseMargins[0][0] - greenExpansion);
+        float g1 = Math.min(1f, baseMargins[0][1] + greenExpansion);
+        if (g0 > g1) {
+            float mid = (g0 + g1) / 2f;
+            g0 = mid;
+            g1 = mid;
+        }
+        adjusted[0][0] = g0;
+        adjusted[0][1] = g1;
+
+        // Make yellow zones contiguous with the green zone to avoid gaps/overlaps.
+        // Yellow lower (row 1) ends where green begins.
+        float y1Start = Math.max(0f, baseMargins[1][0] - greenExpansion * 0.5f);
+        float y1End = g0;
+        if (y1Start > y1End) y1Start = y1End;
+        adjusted[1][0] = y1Start;
+        adjusted[1][1] = y1End;
+
+        // Yellow upper (row 2) begins where green ends.
+        float y2Start = g1;
+        float y2End = Math.min(1f, baseMargins[2][1] + greenExpansion * 0.5f);
+        if (y2End < y2Start) y2End = y2Start;
+        adjusted[2][0] = y2Start;
+        adjusted[2][1] = y2End;
+
         return adjusted;
     }
 
@@ -451,25 +467,69 @@ public class FirstScreen implements Screen {
         shapeRenderer.rectLine(barX + BAR_WIDTH, barY, barX + BAR_WIDTH, barY + BAR_HEIGHT, transparency);
 
         Player playerRef = isPlayer1 ? player : player2;
-        
-        // 3 pointer
-        if (playerRef.getPlayerX() <= 900f && isPlayer1 || playerRef.getPlayerX() >= 900f && !isPlayer1 ) {
-            shapeRenderer.setColor(0.2f, 0.85f, 0.45f, transparency-0.5f);
-            shapeRenderer.rect(barX, barY + 150f, BAR_WIDTH, 15f);
-            shapeRenderer.setColor(1f, 1f, 0f, transparency-0.5f);
-            shapeRenderer.rect(barX, barY + 165f, BAR_WIDTH, 25f);
-            shapeRenderer.setColor(1f, 1f, 0f, transparency-0.5f);
-            shapeRenderer.rect(barX, barY + 125f, BAR_WIDTH, 25f);
+
+        // Determine which adjusted margins to use for this player and shot type
+        float[][] marginsToDraw;
+        if (isPlayer1) {
+            if (player.getPlayerX() < 900f) {
+                marginsToDraw = adjustedShootingMargin3Pointer;
+            } else {
+                marginsToDraw = adjustedShootingMargin2Pointer;
+            }
+        } else {
+            if (player2.getPlayerX() > 900f) {
+                marginsToDraw = adjustedShootingMargin3Pointer2;
+            } else {
+                marginsToDraw = adjustedShootingMargin2Pointer2;
+            }
         }
 
-        // 2 pointer
-        if (playerRef.getPlayerX() > 900f && isPlayer1 || playerRef.getPlayerX() < 900f && !isPlayer1) {
-            shapeRenderer.setColor(0.2f, 0.85f, 0.45f, transparency-0.5f);
-            shapeRenderer.rect(barX, barY + 100f, BAR_WIDTH, 40f);
-            shapeRenderer.setColor(1f, 1f, 0f, transparency-0.5f);
-            shapeRenderer.rect(barX, barY + 140f, BAR_WIDTH, 25f);
-            shapeRenderer.setColor(1f, 1f, 0f, transparency-0.5f);
-            shapeRenderer.rect(barX, barY + 75f, BAR_WIDTH, 25f);
+        // If margins are available, draw green and yellow zones according to fractions
+        if (marginsToDraw != null) {
+            // Green zone (row 0)
+            float g0 = marginsToDraw[0][0];
+            float g1 = marginsToDraw[0][1];
+            float greenY = barY + BAR_HEIGHT * g0;
+            float greenH = BAR_HEIGHT * Math.max(0f, g1 - g0);
+            shapeRenderer.setColor(0.2f, 0.85f, 0.45f, Math.max(0f, transparency - 0.5f));
+            shapeRenderer.rect(barX, greenY, BAR_WIDTH, greenH);
+
+            // Yellow zones (row 1 and row 2)
+            float y10 = marginsToDraw[1][0];
+            float y11 = marginsToDraw[1][1];
+            float y20 = marginsToDraw[2][0];
+            float y21 = marginsToDraw[2][1];
+            if (y11 > y10) {
+                float y1Y = barY + BAR_HEIGHT * y10;
+                float y1H = BAR_HEIGHT * (y11 - y10);
+                shapeRenderer.setColor(1f, 1f, 0f, Math.max(0f, transparency - 0.5f));
+                shapeRenderer.rect(barX, y1Y, BAR_WIDTH, y1H);
+            }
+            if (y21 > y20) {
+                float y2Y = barY + BAR_HEIGHT * y20;
+                float y2H = BAR_HEIGHT * (y21 - y20);
+                shapeRenderer.setColor(1f, 1f, 0f, Math.max(0f, transparency - 0.5f));
+                shapeRenderer.rect(barX, y2Y, BAR_WIDTH, y2H);
+            }
+        } else {
+            // Fallback to original visuals if margins not ready
+            if (playerRef.getPlayerX() <= 900f && isPlayer1 || playerRef.getPlayerX() >= 900f && !isPlayer1 ) {
+                shapeRenderer.setColor(0.2f, 0.85f, 0.45f, transparency-0.5f);
+                shapeRenderer.rect(barX, barY + 150f, BAR_WIDTH, 15f);
+                shapeRenderer.setColor(1f, 1f, 0f, transparency-0.5f);
+                shapeRenderer.rect(barX, barY + 165f, BAR_WIDTH, 25f);
+                shapeRenderer.setColor(1f, 1f, 0f, transparency-0.5f);
+                shapeRenderer.rect(barX, barY + 125f, BAR_WIDTH, 25f);
+            }
+
+            if (playerRef.getPlayerX() > 900f && isPlayer1 || playerRef.getPlayerX() < 900f && !isPlayer1) {
+                shapeRenderer.setColor(0.2f, 0.85f, 0.45f, transparency-0.5f);
+                shapeRenderer.rect(barX, barY + 100f, BAR_WIDTH, 40f);
+                shapeRenderer.setColor(1f, 1f, 0f, transparency-0.5f);
+                shapeRenderer.rect(barX, barY + 140f, BAR_WIDTH, 25f);
+                shapeRenderer.setColor(1f, 1f, 0f, transparency-0.5f);
+                shapeRenderer.rect(barX, barY + 75f, BAR_WIDTH, 25f);
+            }
         }
 
         shapeRenderer.end();
@@ -702,7 +762,7 @@ public class FirstScreen implements Screen {
                 trajectoryTime = 0f;
                 if (shouldMakeShot) {
                     // Award points to player 1 based on whether this was a 3-pointer or 2-pointer
-                    if (shootingMargins == shootingMargin3Pointer) {
+                    if (shootingMargins == adjustedShootingMargin3Pointer) {
                         player1ThreePointScore += 3;
                     } else {
                         player1TwoPointScore += 2;
@@ -867,7 +927,7 @@ public class FirstScreen implements Screen {
                 trajectoryTime2 = 0f;
                 if (shouldMakeShot2) {
                     // Award points to player 2 based on whether this was a 3-pointer or 2-pointer
-                    if (shootingMargins2 == shootingMargin3Pointer) {
+                    if (shootingMargins2 == adjustedShootingMargin3Pointer2) {
                         player2ThreePointScore += 3;
                     } else {
                         player2TwoPointScore += 2;
