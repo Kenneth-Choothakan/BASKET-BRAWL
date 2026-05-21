@@ -5,6 +5,7 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Interpolation;
@@ -93,11 +94,20 @@ public class SelectionScreen implements Screen {
     TextureRegionDrawable Player2Drawable;
 
     Sound sound;
+    private BitmapFont statsFont;
+
+    String [] selectionList = {"Stepth Curry", "Kevin Durant", "Lebron James", "Jimmy Butler", "Mavir", "Brandon", "Vishal", "Jayson Tatum"};
+    String selected;
+    String player1Selected;
+    String player2Selected;
 
 
     
     public SelectionScreen(Main game) {
         this.game = game;
+        selected = selectionList[0];
+        //player1Selected = selectionList[0];
+        //player2Selected = selectionList[0];
         sound = Gdx.audio.newSound(Gdx.files.internal("Music/button.wav"));
         backgroundTexture = new Texture(Gdx.files.internal("SelectionBackground.png"));
         spriteBatch = new SpriteBatch();
@@ -125,10 +135,10 @@ public class SelectionScreen implements Screen {
         Lebronbool = false;
 
         //----
-        homeTexture = new Texture(Gdx.files.internal("homeButton.png"));
+        homeTexture = new Texture(Gdx.files.internal("homebutton.png"));
         homeDrawable = new TextureRegionDrawable(new TextureRegion(homeTexture));
         home = new ImageButton(homeDrawable); 
-        home.setSize(64, 64);
+        home.setSize(80, 80);
         stage.addActor(home);
         home.addListener(new ClickListener() {
         @Override
@@ -157,6 +167,7 @@ public class SelectionScreen implements Screen {
         Butlerbool = false;
         Lebronbool = false;
         sound.play(1.5f);
+        selected = selectionList[1];
             }
         });
 
@@ -178,6 +189,7 @@ public class SelectionScreen implements Screen {
         Butlerbool = false;
         Lebronbool = false;
         sound.play(1.5f);
+        selected = selectionList[0];
             }
         });
 
@@ -198,7 +210,8 @@ public class SelectionScreen implements Screen {
         Durantbool = false;
         Butlerbool = false;
         Lebronbool = true; 
-        sound.play(1.5f);       
+        sound.play(1.5f);    
+        selected = selectionList[2];   
     }
         });
 
@@ -220,6 +233,7 @@ public class SelectionScreen implements Screen {
         Butlerbool = false;
         Lebronbool = false;
         sound.play(1.5f);
+        selected = selectionList[7];
             }
         });
         //--------------
@@ -240,7 +254,8 @@ public class SelectionScreen implements Screen {
         Durantbool = false;
         Butlerbool = true;
         Lebronbool = false;
-        sound.play(1.5f);        
+        sound.play(1.5f);   
+        selected = selectionList[3];     
         }
         });
 
@@ -261,7 +276,10 @@ public class SelectionScreen implements Screen {
         Durantbool = false;
         Butlerbool = false;
         Lebronbool = false;
-    sound.play(1.5f);        }
+    sound.play(1.5f);        
+        selected = selectionList[4];
+
+}
         });
 
         VishalTexture = new Texture(Gdx.files.internal("Vishal1.png"));
@@ -281,7 +299,10 @@ public class SelectionScreen implements Screen {
         Durantbool = false;
         Butlerbool = false;
         Lebronbool = false;
-    sound.play(1.5f);        }
+    sound.play(1.5f);        
+        selected = selectionList[6];
+
+}
         });
 
         BrandonTexture = new Texture(Gdx.files.internal("Brandon1.png"));
@@ -301,7 +322,10 @@ public class SelectionScreen implements Screen {
         Durantbool = false;
         Butlerbool = false;
         Lebronbool = false;
-    sound.play(1.5f);        }
+    sound.play(1.5f);        
+        selected = selectionList[5];
+
+}
         });
 
 
@@ -316,6 +340,9 @@ public class SelectionScreen implements Screen {
         @Override
         public void clicked(InputEvent event, float x, float y) {
         sound.play(1.5f);
+        player1Selected = selected;
+        game.setPlayer1Selected(player1Selected);
+        System.out.println("Player 1: " + player1Selected);
         }
         });
 
@@ -331,6 +358,9 @@ public class SelectionScreen implements Screen {
         @Override
         public void clicked(InputEvent event, float x, float y) {
         sound.play(1.5f);
+        player2Selected = selected;
+        game.setPlayer2Selected(player2Selected);
+        System.out.println("Player 2: " + player2Selected);
         }
         });
         Gdx.input.setInputProcessor(stage);
@@ -341,6 +371,8 @@ public class SelectionScreen implements Screen {
     @Override
     public void show() {
         // Prepare your screen here.
+        statsFont = new BitmapFont();
+        statsFont.getData().setScale(2f);
     }
 
     @Override
@@ -555,8 +587,8 @@ public class SelectionScreen implements Screen {
         }   
         
         //----
+        home.setPosition(10, viewport.getWorldHeight() - 90f);
         home.draw(spriteBatch, 1);
-        home.setPosition(0, 440);
 
         Player1.draw(spriteBatch, 1);
         Player1.setPosition(300, -50);
@@ -589,6 +621,32 @@ public class SelectionScreen implements Screen {
         Brandon.setPosition(380, 60);
 
         spriteBatch.end();
+    }
+
+    private void drawCharacterStats() {
+        if (selected == null) return;
+        
+        CharacterStats stats = CharacterStats.getStatsForCharacter(selected);
+        float statsX = 560;
+        float statsY = 400;
+        
+        spriteBatch.end(); // End batch for font rendering
+        spriteBatch.setProjectionMatrix(viewport.getCamera().combined);
+        spriteBatch.begin();
+        
+        statsFont.draw(spriteBatch, selected, statsX, statsY);
+        statsY -= 40;
+        
+        statsFont.draw(spriteBatch, "Speed: " + String.format("%.1f", stats.speed), statsX, statsY);
+        statsY -= 35;
+        statsFont.draw(spriteBatch, "3PT: " + String.format("%.2f", stats.threePointAccuracy), statsX, statsY);
+        statsY -= 35;
+        statsFont.draw(spriteBatch, "Mid: " + String.format("%.2f", stats.midRangeAccuracy), statsX, statsY);
+        statsY -= 35;
+        statsFont.draw(spriteBatch, "Jump: " + String.format("%.1f", stats.jumpHeight), statsX, statsY);
+        
+        spriteBatch.end();
+        spriteBatch.begin(); // Resume spritebatch for UI elements
     }
     
     @Override
@@ -633,6 +691,9 @@ public class SelectionScreen implements Screen {
         SCTexture.dispose();
         LBJTexture.dispose();
         JTTexture.dispose();
+        if (statsFont != null) {
+            statsFont.dispose();
+        }
 
     }
 }
